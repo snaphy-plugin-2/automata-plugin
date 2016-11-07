@@ -52,10 +52,24 @@ module.exports = function( server, databaseObj, helper, packageObj) {
          */
 		modelObj.getSchema = function(callback) {
 			//Now form the schema and send it to the client..
-			var relations = modelObj.definition.settings.relations;
-			var filters   = modelObj.definition.settings.filters;
-			var tables    = modelObj.definition.settings.tables;
-			var widgets   = modelObj.definition.settings.widgets;
+			let relations = modelObj.definition.settings.relations,
+				filters,
+				tables,
+				widgets;
+
+			const tableObj = helper.getTableJson(modelName);
+
+			if(tableObj){
+				if(tableObj.tables){
+					tables = tableObj.tables;
+				}
+				if(tableObj.widgets){
+					widgets = tableObj.widgets;
+				}
+				if(tableObj.filters){
+					filters = tableObj.filters;
+				}
+			}
 
 			/**
 			 * Now form the desired schema and return it.
@@ -76,12 +90,28 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 		};
 
 
+
 		modelObj.getAbsoluteSchema = function(callback) {
 			//Now form the schema and send it to the client..
-			var relations = modelObj.definition.settings.relations;
-			var filters   = modelObj.definition.settings.filters;
-			var tables    = modelObj.definition.settings.tables;
-			var widgets   = modelObj.definition.settings.widgets;
+			let relations = modelObj.definition.settings.relations,
+			filters,
+			tables,
+			widgets;
+
+			const tableObj = helper.getTableJson(modelName);
+
+			if(tableObj){
+				if(tableObj.tables){
+					tables = tableObj.tables;
+				}
+				if(tableObj.widgets){
+					widgets = tableObj.widgets;
+				}
+				if(tableObj.filters){
+					filters = tableObj.filters;
+				}
+			}
+
 
 			/**
 			 * Now form the desired schema and return it.
@@ -109,7 +139,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 					description: "Send the schema of the model requested."
 				}
 		);
-
 
 		//Now registering the method `getAbsoluteSchema` required for robust automata plugin..
 		modelObj.remoteMethod(
@@ -170,6 +199,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param header
 	 * @param schema
 	 * @param relations
+	 * @param rootModelName model name of the root
+	 * @param absoluteSchema {boolean} if the request is for absolute schema or getSchema
      */
 	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema){
 		//Now adding  prop of belongTo and hasMany method to the header and schema respectfully...
@@ -439,11 +470,13 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			};
 		}
 		schema.fields   = [];
-		var modelObj    = app.models[modelName],
-		modelProperties = modelObj.definition.rawProperties,
-		validationObj  = modelObj.definition.settings.validationsBackend,
-        complexValidation  = modelObj.definition.settings.complexValidation;
-		var newValidationObj = {
+		const {validationsBackend, complexValidation} = helper.getValidationObj(modelName);
+
+		let validationObj = validationsBackend;
+		let modelObj    = app.models[modelName],
+		modelProperties = modelObj.definition.rawProperties;
+
+		let newValidationObj = {
 			rules:{},
 			messages:{}
 		};
