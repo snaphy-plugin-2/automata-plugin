@@ -470,11 +470,27 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			};
 		}
 		schema.fields   = [];
-		const {validationsBackend, complexValidation} = helper.getValidationObj(modelName);
+		const validationModelObj = helper.getValidationObj(modelName);
+		//{validationsBackend, complexValidation}
 
-		let validationObj = validationsBackend;
-		let modelObj    = app.models[modelName],
-		modelProperties = modelObj.definition.rawProperties;
+		let
+			validationObj,
+			complexValidation,
+			modelObj    = app.models[modelName],
+			modelProperties = modelObj.definition.rawProperties;
+
+
+		if(validationModelObj){
+			if(validationModelObj.validationsBackend){
+				validationObj = validationModelObj.validationsBackend;
+			}
+
+			if(validationModelObj.complexValidation){
+				complexValidation = validationModelObj.complexValidation;
+			}
+		}
+
+
 
 		let newValidationObj = {
 			rules:{},
