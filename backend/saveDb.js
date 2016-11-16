@@ -62,7 +62,7 @@ var addSaveMethod = function(app, modelName) {
         };
 
         //Params to remove from main data..
-        var removeParams = {}
+        var removeParams = {};
         
         var include = addRelation(data, schema.relation, relations, modelRelationSchema, removeParams);
         

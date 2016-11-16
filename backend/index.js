@@ -407,6 +407,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param modelName
 	 * @param prefix
 	 * @param header
+	 * @param absoluteSchema
      * @returns {*|Array}
      */
 	var addPropToHeader = function(app, modelName, prefix,  header, absoluteSchema){
