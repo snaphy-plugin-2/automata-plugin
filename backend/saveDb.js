@@ -88,6 +88,7 @@ var addSaveMethod = function(app, modelName) {
                     callback(err);
                 });
         } else {
+            console.log(data);
             //Now save/update the data..
             modelObj.upsert(data)
                 .then(function(instance) {
