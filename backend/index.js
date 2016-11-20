@@ -2,6 +2,7 @@
 module.exports = function( server, databaseObj, helper, packageObj) {
 	var saveRemoteMethod = require('./saveDb');
 	var onDelete = require('./cascadingDelete');
+	var _ = require("lodash");
 	var modifyHasAndBelongsToMany = require("./modifyHasAndBelongsToMany");
 	/**
 	 * Here server is the main app object
@@ -128,6 +129,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			schema.tables  = tables;
 			schema.widgets  = widgets;
 
+			if(schema.fields){
+				//Sort the fields..
+				schema.fields = sortByPriority(schema.fields);
+			}
+
+
 			callback(null, schema);
 		};
 
@@ -191,6 +198,35 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 		});//observe..
 	};
 
+	/**
+	 * Sort schemas by priority
+	 * @params {[object]} array of object that needs to be sorted in descending order.
+ 	 */
+	var sortByPriority = function(collection){
+		console.log("sorting");
+		//_.sortBy(users, [function(o) { return o.user; }]);
+		collection = _.sortBy(collection, [function(obj) {
+			if(obj){
+				if(obj.templateOptions){
+					if(obj.templateOptions.fields){
+						//Also sort if any nested fields present..
+						obj.templateOptions.fields = sortByPriority(obj.templateOptions.fields);
+					}
+
+					if(obj.templateOptions.priority){
+						return obj.templateOptions.priority;
+					}
+				}
+			}
+			return 0;
+		}]).reverse();
+
+		return collection;
+	};
+
+
+
+
 
 	//TODO ADD ENTRY FOR NESTED DATA RELATED MODELS NOT DONE AT CLIENT SIDE IN ANGULAR FORMLY.
 	/**
@@ -201,9 +237,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param relations
 	 * @param rootModelName model name of the root
 	 * @param absoluteSchema {boolean} if the request is for absolute schema or getSchema
-	 * @param exceptModel {string} Name of model which to exclude from adding relations
      */
-	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema, exceptModel){
+	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema){
 
 		//Now adding  prop of belongTo and hasMany method to the header and schema respectfully...
 		for(var relationName in relations){
