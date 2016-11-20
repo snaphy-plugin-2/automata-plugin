@@ -201,8 +201,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param relations
 	 * @param rootModelName model name of the root
 	 * @param absoluteSchema {boolean} if the request is for absolute schema or getSchema
+	 * @param exceptModel {string} Name of model which to exclude from adding relations
      */
-	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema){
+	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema, exceptModel){
+
 		//Now adding  prop of belongTo and hasMany method to the header and schema respectfully...
 		for(var relationName in relations){
 			if(relations.hasOwnProperty(relationName)){
@@ -211,31 +213,24 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				//Only add relation if template option in the template option is present..
 				if((relationObj.type === 'hasMany' ||  relationObj.type === 'hasAndBelongsToMany' ) && relationObj.templateOptions !== undefined){
 					var nestedSchema = {};
-
 					if(relationObj.type === "hasMany"){
 						if(relationObj.through){
-
-							nestedSchema.type = 'arrayValue';
 							nestedSchema.key = relationName;
-							nestedSchema.templateOptions = {};
-							nestedSchema.templateOptions.btnText = relationObj.templateOptions.btnText;
-							if(relationObj.templateOptions.searchProp){
-								nestedSchema.templateOptions.searchProp = relationObj.templateOptions.searchProp;
-							}
-							if(relationObj.templateOptions.create){
-								nestedSchema.templateOptions.create = relationObj.templateOptions.create;
-							}
-							if(relationObj.templateOptions.hide){
-								nestedSchema.templateOptions.hide = relationObj.templateOptions.hide;
-							}
-							if(relationObj.templateOptions.init){
-								nestedSchema.templateOptions.init = relationObj.templateOptions.init;
+							//Now cloning the object from templateOptions....
+							nestedSchema.templateOptions = Object.assign({}, relationObj.templateOptions);
+							if(relationObj.templateOptions.type){
+								nestedSchema.type = relationObj.templateOptions.type;
+								delete nestedSchema.templateOptions.type;
+							}else{
+								nestedSchema.type = 'arrayValue';
 							}
 
+							//Add model to be searched..
 							nestedSchema.templateOptions.model = relationObj.through;
 
 							var throughRelationName;
 							var throughSearchId;
+							var throughTemplateOptions = {};
 							var throughModelObj = app.models[relationObj.through];
 							var relatedModelRelationObj = throughModelObj.definition.settings.relations;
 							for(var relatedModelRelation in relatedModelRelationObj){
@@ -243,6 +238,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 									var relatedModel = relatedModelRelationObj[relatedModelRelation];
 									if(modelName === relatedModel.model){
 										throughRelationName = relatedModelRelation;
+										if(relatedModel.templateOptions){
+											throughTemplateOptions = relatedModel.templateOptions;
+										}
 									}
 									else if(rootModelName === relatedModel.model){
 										if(relatedModel.foreignKey){
@@ -251,21 +249,15 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 											throughSearchId = rootModelName.toLowerCase() + "Id";
 										}
 									}
-									else{
-										// Do nothing..
-									}
 								}
 							}
-
-
-							//console.log(nestedSchema);
 							//Now get nested schema str for the relational models..
 							generateTemplateStr(app, relationObj.through, nestedSchema.templateOptions);
 
 							var belongsToSchemaThrough = {
 								type           : "belongsTo",
 								key            : throughRelationName,
-								templateOptions: relationObj.templateOptions
+								templateOptions: throughTemplateOptions
 							};
 
 							//Model name of relational data..
@@ -315,14 +307,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						nestedSchema.key = relationName;
 						nestedSchema.templateOptions = relationObj.templateOptions;
 						nestedSchema.templateOptions.model = relationObj.model;
-						//console.log(nestedSchema);
 						//Now get nested schema str for the relational models..
 						generateTemplateStr(app, relationObj.model, nestedSchema.templateOptions);
 
 						//Now add nestedSchema to the schema object.
 						schema.relations.hasAndBelongsToMany.push(relationName);
 					}
-
 					schema.fields.push(nestedSchema);
 				}
 				if((relationObj.type === 'hasOne' || relationObj.type === 'belongsTo') && relationObj.templateOptions !== undefined){
