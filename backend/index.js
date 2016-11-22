@@ -191,10 +191,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			}else{
 				next();
 			}
-
-			//console.log(ctx.query.where);
-
-
 		});//observe..
 	};
 
@@ -203,7 +199,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @params {[object]} array of object that needs to be sorted in descending order.
  	 */
 	var sortByPriority = function(collection){
-		console.log("sorting");
 		//_.sortBy(users, [function(o) { return o.user; }]);
 		collection = _.sortBy(collection, [function(obj) {
 			if(obj){

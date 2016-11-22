@@ -321,7 +321,7 @@ var saveOrUpdate = function(app, dataInstance, relationsType, relationDataObj, m
             //get the foriegnKey.
             var foriegnKey = modelRelationSchema[relationName].foriegnKey;
             if (!foriegnKey) {
-                foriegnKey = modelRelationSchema[relationName].model.toLowerCase() + 'Id';
+                foriegnKey = _.lowerFirst(relationName) + 'Id';
             }
 
             if (relationsType === 'belongsTo') {
@@ -420,31 +420,32 @@ var upsertHasOne = function(app, modelObj, relationData, dataInstance, relationN
 
 
     var addParentData = function(parentRelationName, dataInstance, parentObj, result){
+        if(parentRelationName){
+            var parentData = result[parentRelationName].build(dataInstance);
+            //Now update the parent data..
+            parentObj.upsert(parentData)
+                .then(function() {
+                    console.log("Data Successfully saved in parent hasOne");
 
-        var parentData = result[parentRelationName].build(dataInstance);
-        //Now update the parent data..
-        parentObj.upsert(parentData)
-        .then(function() {
-            console.log("Data Successfully saved in parent hasOne");
-            
-        })
-        .catch(function(err) {
-            console.log("error occured in hasOne parent upsert");
-            console.error(err);
-        });
+                })
+                .catch(function(err) {
+                    console.log("error occured in hasOne parent upsert");
+                    console.error(err);
+                });
+        }
     };
 };
 
 
 
 
-var upsertBelongsTo = function(modelObj, relationData, dataInstance, relationName, foriegnKey, callback) {
+var upsertBelongsTo = function(modelObj, relationData, dataInstance, relationName, foreignKey, callback) {
     if (!_.isEmpty(relationData)) {
         modelObj.upsert(relationData)
             .then(function(data) {
                 //Now attach data to the parent dataInstance..
                 dataInstance[relationName](data);
-                dataInstance[foriegnKey] = data.id;
+                dataInstance[foreignKey] = data.id;
 
                 dataInstance.save()
                     .then(function(value) {
