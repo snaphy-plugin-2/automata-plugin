@@ -88,7 +88,6 @@ var addSaveMethod = function(app, modelName) {
                     callback(err);
                 });
         } else {
-            console.log(data);
             //Now save/update the data..
             modelObj.upsert(data)
                 .then(function(instance) {
@@ -494,7 +493,7 @@ var upsertManyThrough = function(app, modelObj, relationData, dataInstance, rela
         var relationObj = throughModelObj.definition.settings.relations;
         var relationData_ = relationObj[throughModelSchema.throughModelRelation];
         if (relationData_.foreignKey === "") {
-            throughModelForeignKey = relationData_.model.toLowerCase() + "Id";
+            throughModelForeignKey = _.lowerFirst(throughModelSchema.throughModelRelation) + "Id";
         } else {
             throughModelForeignKey = relationData_.foreignKey;
         }
@@ -512,7 +511,7 @@ var upsertManyThrough = function(app, modelObj, relationData, dataInstance, rela
         dataInstance,
         relationData,
         modelObj,
-        relationName,
+        throughModelSchema.throughModelRelation,
         foriegnKey,
         relationSchema,
         throughObj,
@@ -607,7 +606,7 @@ var deleteRepeatedData = function(
 
 var upsertHasManyThroughFinal = function(app, modelObj, relationDataObj, dataInstance, relationName, foriegnKey, relationSchema, throughObj, callback) {
     var relatedData = relationDataObj[relationName];
-
+    console.log(relationDataObj, relationName);
 
     if (relatedData) {
         modelObj.upsert(relatedData)
@@ -723,7 +722,7 @@ var upsertTypeMany = function(relatedModelClass, relationDataArr, dataInstance, 
 
 
     } catch (err) {
-        console.log("Got error");
+        console.error("Got error", err);
         callback(err);
     }
 
@@ -792,7 +791,7 @@ var upserthasAndBelongsToManyFinal = function(dataInstance, relationName, relati
             var connect = dataInstance["__connect__" + relationName];
             connect(dataInstance.id, relatedDataId, function(err, values){
                 if(err){
-                    console.log(err);
+                    console.error(err);
                 }else{
                     //Now save the instance of data in the dataInstance
                     console.log("Link successfully added to hasAndBelongsToMany relationship.");
@@ -815,7 +814,7 @@ var dataUpsert = function(relatedModelClass, relationData, relatedDataId, callba
             callback();
         })
         .catch(function(err){
-            console.log("\n\n\nGot error");
+            console.error("\n\n\nGot error", err);
             return callback(err);
         });
     //});
