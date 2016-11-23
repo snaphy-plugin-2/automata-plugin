@@ -606,7 +606,6 @@ var deleteRepeatedData = function(
 
 var upsertHasManyThroughFinal = function(app, modelObj, relationDataObj, dataInstance, relationName, foriegnKey, relationSchema, throughObj, callback) {
     var relatedData = relationDataObj[relationName];
-    console.log(relationDataObj, relationName);
 
     if (relatedData) {
         modelObj.upsert(relatedData)
