@@ -309,7 +309,7 @@
                     </ul>
                     <h3 class="block-title">{{tableTitle}}</h3>
                 </div>
-                <div ng-if="schema.validations" class="block-content block-content-narrow">
+                <div ng-if="schema.validations" class="block-content block-content-full">
                     <!-- {{saveFormData}}  -->
                     <form name="schema.form" ng-validate="schema.validations" novalidate  class="form-horizontal">
                         <formly-form   model="saveFormData" fields="schema.fields">
@@ -319,26 +319,32 @@
                 </div><!--block-content-->
             </div>
             <!-- ng disabled removed as now ng-disabled="!enableButton(schema.form)" -->
-            <div class="modal-footer">
-                <button data-target="#addDataModal"  class="btn btn-sm btn-default "  type="button" data-dismiss="modal">Close</button>
-                <button class="btn btn-sm btn-default "  style="margin-right:20px;" type="button" ng-click="resetSavedForm(schema.form)">Reset data</button>
-                <button
+           <!-- <div class="modal-footer">-->
+                <div class="block-content block-content-mini block-content-full">
+                    <div class="row">
+                        <div class="col-xs-12 text-right">
+                            <button data-target="#addDataModal"  class="btn btn-sm btn-default "  type="button" data-dismiss="modal">Close</button>
+                            <button class="btn btn-sm btn-default "  style="margin-right:20px;" type="button" ng-click="resetSavedForm(schema.form)">Reset data</button>
+                            <button
 
-                    class="btn btn-sm btn-default"
-                    ng-click="saveForm(schema, schema.form,  saveFormData, true, '#addDataModal')">
-                        <i class="fa fa-save"></i>
-                        Save
-                </button>
-                <button
+                                class="btn btn-sm btn-default"
+                                ng-click="saveForm(schema, schema.form,  saveFormData, true, '#addDataModal')">
+                                    <i class="fa fa-save"></i>
+                                    Save
+                            </button>
+                            <button
 
-                    type="submit"
-                    class="btn btn-sm bg-primary-dark"
-                    style="color:#fff;"
-                    ng-click="saveForm(schema, schema.form, saveFormData, false)" >
-                        <i class="fa fa-save"></i>
-                        Save and add another
-                </button>
-            </div>
+                                type="submit"
+                                class="btn btn-sm bg-primary-dark"
+                                style="color:#fff;"
+                                ng-click="saveForm(schema, schema.form, saveFormData, false)" >
+                                    <i class="fa fa-save"></i>
+                                    Save and add another
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <!--</div>-->
         </div>
     </div>
 </div>

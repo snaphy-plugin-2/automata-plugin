@@ -22,7 +22,7 @@ var addSaveMethod = function(app, modelName) {
      * Remote method for saving data with its depedencies
      * @param  {array} data   Adding data object containing model data.
      * @param  {array} schema schema of model.
-     * @param  {object} callback loopback callback.
+     * @param  {function} callback loopback callback.
      * @example
      * data:
      *  {
@@ -35,7 +35,7 @@ var addSaveMethod = function(app, modelName) {
      *      }
      *  }
      *
-     * @param  {object} schema Schema object containg relationship information for the data.
+     * @param  {object} schema Schema object containing relationship information for the data.
      * @example  schema:{
      *           'relation': {
      *              'hasMany':['recipes'],
