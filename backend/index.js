@@ -19,9 +19,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 */
 	var init = function(){
 		//For loading the raw properties..
-		//console.log(server.models.Employee.definition.rawProperties);
-		//For loading the settings..
-		//console.log(server.models.Employee.definition.settings);
 		//Just Introduce a remote method in all the given method..
 		//run each models in the loop and add a remote method to it.
 		var models = server.models();
@@ -42,8 +39,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	/**
 	 * Add remote methods to the models..
 	 * @param app
-	 * @param modelname
-	 * @param index
+	 * @param modelName
      */
 	var addRemoteMethod = function(app, modelName){
 		var modelObj = app.models[modelName];
@@ -75,7 +71,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			/**
 			 * Now form the desired schema and return it.
 			 */
-			var header = addPropToHeader(app, modelName, ''),
+			var header = addPropToHeader(app, modelName, '', [], false, []),
 			//Get template structure..
 			schema = generateTemplateStr(app, modelName);
 			//Now recursively add relations to the models...
@@ -99,43 +95,57 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			tables,
 			widgets;
 
-			const tableObj = helper.getTableJson(modelName);
-
-			if(tableObj){
-				if(tableObj.tables){
-					tables = tableObj.tables;
-				}
-				if(tableObj.widgets){
-					widgets = tableObj.widgets;
-				}
-				if(tableObj.filters){
-					filters = tableObj.filters;
-				}
-			}
-
-
-			/**
-			 * Now form the desired schema and return it.
-			 */
-			var header = addPropToHeader(app, modelName, ''),
-			//Get template structure..
-			schema = generateTemplateStr(app, modelName);
-			//Now recursively add relations to the models...
-			addNestedModelRelation(app, header, schema, relations, modelName, true);
-
-			//Now add filters and tables and headers to the model
-			schema.header  = header;
-			schema.filters = filters;
-			schema.tables  = tables;
-			schema.widgets  = widgets;
-
-			if(schema.fields){
-				//Sort the fields..
-				schema.fields = sortByPriority(schema.fields);
-			}
+			//Load login plugin get roles method..
+			const {getAuthorisedRoles} = helper.loadPlugin('login');
+			//Find the authorised roles for the data..
+			if(getAuthorisedRoles){
+				getAuthorisedRoles(server, function(err, roleList){
+					if(err){
+						console.error("Error occured in fetching roles.", err);
+                        callback(err);
+					}else{
+                        const tableObj = helper.getTableJson(modelName);
+                        if(tableObj){
+                            if(tableObj.tables){
+                                tables = tableObj.tables;
+                            }
+                            if(tableObj.widgets){
+                                widgets = tableObj.widgets;
+                            }
+                            if(tableObj.filters){
+                                filters = tableObj.filters;
+                            }
+                        }
 
 
-			callback(null, schema);
+                        /**
+                         * Now form the desired schema and return it.
+                         */
+                        var header = addPropToHeader(app, modelName, '', [], false, roleList),
+                        //Get template structure..
+                        schema = generateTemplateStr(app, modelName, null, roleList);
+                        //Now recursively add relations to the models...
+                        addNestedModelRelation(app, header, schema, relations, modelName, true, roleList);
+
+                        //Now add filters and tables and headers to the model..
+                        schema.header  = header;
+                        schema.filters = filters;
+                        schema.tables  = tables;
+                        schema.widgets  = widgets;
+
+                        if(schema.fields){
+                            //Sort the fields..
+                            schema.fields = sortByPriority(schema.fields);
+                        }
+
+
+                        callback(null, schema);
+					}
+				});
+			}else{
+                let err = new Error("getAuthorisedRoles is not defined in login plugin");
+                callback(err, null);
+            }
 		};
 
 		//Now registering the method `getSchema`
@@ -161,14 +171,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	var addCaseSensitiveSearch = function(server, modelName){
 		var modelObj = server.models[modelName];
 		modelObj.observe("access", function (ctx, next) {
-			//console.log(ctx.query.where);
 			if(ctx.query.where){
 				for(var whereProp in ctx.query.where){
-					//console.log("\n\n\n");
-					//console.log(whereProp);
 					if(ctx.query.where.hasOwnProperty(whereProp)){
 						var like = ctx.query.where[whereProp].like;
-						//console.log(like, whereProp);
 						if(like){
 							var patt= /\/.*\//;
 							if(patt.test(like)){
@@ -179,7 +185,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
 								var pattern = new RegExp(''+like+'.*', "i"); /* case-insensitive RegExp search */
 								//Now modifying the like property..
-								//	console.log(pattern);
 								ctx.query.where[whereProp].like = pattern;
 							}
 
@@ -220,6 +225,61 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	};
 
 
+    /**
+     * Check if the property has allow role or reject role..
+     * @param propertyObj Loopback model property obj
+     * @param roleList list of roles defined for current logged user..loopback.currentContext
+     * @returns {boolean} false if property is allowed and true if it is rejected..
+     */
+    const checkPropertyAccess = function(propertyObj, roleList){
+        if(!roleList){
+            roleList = [];
+        }
+
+
+        let rejectProperty = false;
+        if(propertyObj.templateOptions){
+            if(propertyObj.templateOptions.acl){
+                if(propertyObj.templateOptions.acl.reject){
+                    let found = _.find(propertyObj.templateOptions.acl.reject, function(rejectedRole) {
+                        for(let i=0; roleList.length; i++){
+                            let userRole = roleList[i];
+                            //If current role is in reject role..then reject the role..
+                            if(userRole === rejectedRole){
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+
+                    //Now check if current role is also present in allow role list
+                    if(found){
+                        rejectProperty = true;
+                        if(propertyObj.templateOptions.acl.allow) {
+                            let found = _.find(propertyObj.templateOptions.acl.allow, function(allowedRole) {
+                                for(let i=0; roleList.length; i++){
+                                    let userRole = roleList[i];
+                                    //If current role is in reject role..then reject the role..
+                                    if(userRole === allowedRole){
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            });
+
+                            if(found) {
+                                rejectProperty = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return rejectProperty;
+
+    };
+
 
 
 
@@ -232,14 +292,23 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param relations
 	 * @param rootModelName model name of the root
 	 * @param absoluteSchema {boolean} if the request is for absolute schema or getSchema
+	 * @param roleList {[string]} list of roles assigned to current logged user..
      */
-	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema){
+	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema, roleList){
 
 		//Now adding  prop of belongTo and hasMany method to the header and schema respectfully...
 		for(var relationName in relations){
 			if(relations.hasOwnProperty(relationName)){
 				var relationObj = relations[relationName];
 				var modelName       = relationObj.model;
+                //Flag to track if to reject property or accept prop..
+                var rejectProperty = checkPropertyAccess(relationObj, roleList);
+
+                if(rejectProperty){
+                    //Skip this property..
+                    continue;
+                }
+
 				//Only add relation if template option in the template option is present..
 				if((relationObj.type === 'hasMany' ||  relationObj.type === 'hasAndBelongsToMany' ) && relationObj.templateOptions !== undefined){
 					var nestedSchema = {};
@@ -282,7 +351,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 								}
 							}
 							//Now get nested schema str for the relational models..
-							generateTemplateStr(app, relationObj.through, nestedSchema.templateOptions);
+							generateTemplateStr(app, relationObj.through, nestedSchema.templateOptions, roleList);
 
 							var belongsToSchemaThrough = {
 								type           : "belongsTo",
@@ -300,7 +369,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 							nestedSchema.templateOptions.fields.push(belongsToSchemaThrough);
 
 							//Also add templateStr for related model of HasManyThrough
-							generateTemplateStr(app, relationObj.model, belongsToSchemaThrough.templateOptions);
+							generateTemplateStr(app, relationObj.model, belongsToSchemaThrough.templateOptions, roleList);
 
 
 							/**
@@ -323,9 +392,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 							nestedSchema.key = relationName;
 							nestedSchema.templateOptions = relationObj.templateOptions;
 							nestedSchema.templateOptions.model = relationObj.model;
-							//console.log(nestedSchema);
 							//Now get nested schema str for the relational models..
-							generateTemplateStr(app, relationObj.model, nestedSchema.templateOptions);
+							generateTemplateStr(app, relationObj.model, nestedSchema.templateOptions, roleList);
 
 							//Now add nestedSchema to the schema object.
 							schema.relations.hasMany.push(relationName);
@@ -338,7 +406,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						nestedSchema.templateOptions = relationObj.templateOptions;
 						nestedSchema.templateOptions.model = relationObj.model;
 						//Now get nested schema str for the relational models..
-						generateTemplateStr(app, relationObj.model, nestedSchema.templateOptions);
+						generateTemplateStr(app, relationObj.model, nestedSchema.templateOptions, roleList);
 
 						//Now add nestedSchema to the schema object.
 						schema.relations.hasAndBelongsToMany.push(relationName);
@@ -348,10 +416,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				if((relationObj.type === 'hasOne' || relationObj.type === 'belongsTo') && relationObj.templateOptions !== undefined){
 					if(absoluteSchema){
 						//Now add its properties to the header..
-						header = addPropToHeader(app, relationObj.model, relationName,  header, true);
+						header = addPropToHeader(app, relationObj.model, relationName,  header, true, roleList);
 					}else{
 						//Now add its properties to the header..
-						header = addPropToHeader(app, relationObj.model, relationName,  header);
+						header = addPropToHeader(app, relationObj.model, relationName,  header, false, roleList);
 					}
 
 					if(relationObj.type === "hasOne"){
@@ -369,17 +437,14 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 					belongsToSchema.templateOptions.model      = relationObj.model;
 					belongsToSchema.templateOptions.foreignKey = relationObj.foreignKey === "" ? relationName + 'Id' : relationObj.foreignKey;
 					//Now add nested schema to the relational model.
-					generateTemplateStr(app, relationObj.model, belongsToSchema.templateOptions);
+					generateTemplateStr(app, relationObj.model, belongsToSchema.templateOptions, roleList);
 
 					if(belongsToSchema.templateOptions.includeRelatedModel){
 						//Now if model-> related model -> related model (belongTo data is requested)
 						//If some related mode of related model is requested too.. then in this case.. call this method..
-						//TODO THIS CONDITION MAY LEADS TO INFINITE LOOP OF CYCLIC ERROR ..AVOID..
-						//TODO ERROR PRONE USE IT CAUTIONLY....
-						//console.log(relationObj.model);
 						var relatedModelObj = app.models[relationObj.model];
 						var relatedModelRelations = relatedModelObj.definition.settings.relations;
-						var relatedHeader = addPropToHeader(app, relationObj.model, '');
+						var relatedHeader = addPropToHeader(app, relationObj.model, '', [], false, roleList);
 
 						belongsToSchema.templateOptions.relations = belongsToSchema.templateOptions.relations || {
 							hasMany:[],
@@ -391,7 +456,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						//add schema
 						addNestedModelRelation(app, relatedHeader, belongsToSchema.templateOptions, relatedModelRelations, relationObj.model);
 					}
-					//console.log(belongsToSchema);
 					//Now add this to the schema..
 					schema.fields.push(belongsToSchema);
 				}
@@ -428,10 +492,14 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param prefix
 	 * @param header
 	 * @param absoluteSchema
+	 * @param roleList
      * @returns {*|Array}
      */
-	var addPropToHeader = function(app, modelName, prefix,  header, absoluteSchema){
+	var addPropToHeader = function(app, modelName, prefix,  header, absoluteSchema, roleList){
 		header = header || [];
+        if(!absoluteSchema){
+            absoluteSchema = false;
+        }
 		var modelObj = app.models[modelName],
 		modelProperties = modelObj.definition.rawProperties,
 		hiddenProperties = modelObj.definition.settings.hidden;
@@ -439,31 +507,37 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			if(modelProperties.hasOwnProperty(key)){
 				//Add only if template is defined.
 				if(modelProperties[key].template !== undefined){
-					var propIsHidden = false;
-					if(hiddenProperties){
-						//Now checkingif the value is a hidden prop.
-						for(var i=0; i<hiddenProperties.length; i++){
-							var prop = hiddenProperties[i];
-							if(prop ===  key){
-								propIsHidden = true;
-								break;
-							}
-						}
-					}
-					if(!propIsHidden){
-						if(prefix === ''){
-							//Add key to the header..
-							header.push(key);
-						}else{
-							if(absoluteSchema){
-								header.push(prefix + '.' + key);
-							}else{
-								header.push(prefix + '_' + key);
-							}
+                    //Flag to track if to reject property or accept prop..
+                    let rejectProperty = checkPropertyAccess(modelProperties[key].template, roleList);
+                    //Only allow if reject prop value is false..
+                    if(!rejectProperty){
+                        var propIsHidden = false;
+                        if(hiddenProperties){
+                            //Now checkingif the value is a hidden prop.
+                            for(var i=0; i<hiddenProperties.length; i++){
+                                var prop = hiddenProperties[i];
+                                if(prop ===  key){
+                                    propIsHidden = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if(!propIsHidden){
+                            if(prefix === ''){
+                                //Add key to the header..
+                                header.push(key);
+                            }else{
+                                if(absoluteSchema){
+                                    header.push(prefix + '.' + key);
+                                }else{
+                                    header.push(prefix + '_' + key);
+                                }
 
-						}
+                            }
 
-					}
+                        }
+                    }
+
 				}//if
 			}
 		}
@@ -476,10 +550,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param app
 	 * @param modelName
 	 * @param schema
+	 * @param roleList {[string]} list of roles for current logged user. Loopback current context.
      * @returns {*}
      */
-	var generateTemplateStr = function(app, modelName, schema){
-		if(schema === undefined){
+	var generateTemplateStr = function(app, modelName, schema, roleList){
+		if(!schema){
 			schema = {};
 			schema.model = modelName;
 			schema.relations = {
@@ -522,26 +597,33 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			if(modelProperties.hasOwnProperty(propertyName)){
 				var propObj = modelProperties[propertyName].template;
 				if(propObj !== undefined){
-					propObj.key = propertyName;
-					//also add the validation to the object..
-					try{
-						var validationRules = validationObj.rules[propertyName];
-						var validationMessages = validationObj.messages[propertyName];
+                    //Flag to track if to reject property or accept prop..
+                    let rejectProperty = checkPropertyAccess(propObj, roleList);
 
-						if(propObj.templateOptions && validationRules){
-							if(propObj.templateOptions.id){
-								var validationName = propObj.templateOptions.id;
-								//Get the validation object..
-								newValidationObj.rules[validationName] = validationRules;
-								newValidationObj.messages[validationName] = validationMessages;
-							}
-						}
-					}catch(err){
-						// Do nothing
-						// Validation is not defined in the model definition
-					}
 
-					schema.fields.push(propObj);
+                    //Add property only if rejectProperty value is false..
+                    if(!rejectProperty){
+                        propObj.key = propertyName;
+                        //also add the validation to the object..
+                        try{
+                            var validationRules = validationObj.rules[propertyName];
+                            var validationMessages = validationObj.messages[propertyName];
+
+                            if(propObj.templateOptions && validationRules){
+                                if(propObj.templateOptions.id){
+                                    var validationName = propObj.templateOptions.id;
+                                    //Get the validation object..
+                                    newValidationObj.rules[validationName] = validationRules;
+                                    newValidationObj.messages[validationName] = validationMessages;
+                                }
+                            }
+                        }catch(err){
+                            // Do nothing
+                            // Validation is not defined in the model definition
+                        }
+
+                        schema.fields.push(propObj);
+                    }
 				}
 			}
 		}//for-in
