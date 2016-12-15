@@ -6,6 +6,59 @@
 ### This plugin is exposed on  `/automata` route
 
 
+###`GetAbsoluteSchema` method
+1) Fetched the schema of any model.
+2) You can assign roles to restrict the property.  
+>Example
+
+```
+  {
+      "property": {
+        "status": {
+          "type": "string",
+          "required": false,
+          "default": "allow",
+          "template": {
+            "type": "selectString",
+            "templateOptions": {
+              "label": "Add a current status to allow/restrict.",
+              "id": "employeeStatus",
+              "options": [
+                "allow",
+                "onhold",
+                "reject"
+              ],
+              "acl":{
+                "allow":[],
+                "reject": ["BrandStaff", "BrandAdmin"]
+              }
+            }
+          }
+        }
+      }
+      "relations": {
+         "brand": {
+              "type": "belongsTo",
+              "model": "Brand",
+              "foreignKey": "",
+              "templateOptions": {
+                "btnText": "Assign brand",
+                "searchProp": "name",
+                "search": true,
+                "create": false,
+                "id": "brandName",
+                "acl":{
+                  "allow":[],
+                  "reject": ["BrandStaff", "BrandAdmin"]
+                }
+              }
+         }
+      }
+    }
+```
+
+
+
 ```
 {
   "name": "Order",
@@ -168,7 +221,7 @@
 
 ```
 
-###### snaphy plugin depedency
+###### snaphy plugin dependency
 1. JqueryValidate
 
 
