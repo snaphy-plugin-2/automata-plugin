@@ -8,7 +8,7 @@
 
 ###`GetAbsoluteSchema` method
 1) Fetched the schema of any model.
-2) You can assign roles to restrict the property.  
+2) You can assign roles to restrict the property.Only dynamic and predefined loopback roles allowed. static roles not allowed.
 >Example
 
 ```
