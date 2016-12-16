@@ -118,12 +118,15 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                         }
 
 
+
                         /**
                          * Now form the desired schema and return it.
                          */
                         var header = addPropToHeader(app, modelName, '', [], false, roleList),
                         //Get template structure..
                         schema = generateTemplateStr(app, modelName, null, roleList);
+
+
                         //Now recursively add relations to the models...
                         addNestedModelRelation(app, header, schema, relations, modelName, true, roleList);
 
@@ -137,6 +140,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             //Sort the fields..
                             schema.fields = sortByPriority(schema.fields);
                         }
+
 
 
                         callback(null, schema);
@@ -236,13 +240,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             roleList = [];
         }
 
-
         let rejectProperty = false;
         if(propertyObj.templateOptions){
             if(propertyObj.templateOptions.acl){
                 if(propertyObj.templateOptions.acl.reject){
                     let found = _.find(propertyObj.templateOptions.acl.reject, function(rejectedRole) {
-                        for(let i=0; roleList.length; i++){
+                        for(let i=0; i < roleList.length; i++){
                             let userRole = roleList[i];
                             //If current role is in reject role..then reject the role..
                             if(userRole === rejectedRole){
@@ -257,7 +260,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                         rejectProperty = true;
                         if(propertyObj.templateOptions.acl.allow) {
                             let found = _.find(propertyObj.templateOptions.acl.allow, function(allowedRole) {
-                                for(let i=0; roleList.length; i++){
+                                for(let i=0; i < roleList.length; i++){
                                     let userRole = roleList[i];
                                     //If current role is in reject role..then reject the role..
                                     if(userRole === allowedRole){
@@ -267,6 +270,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                                 return false;
                             });
 
+
+
                             if(found) {
                                 rejectProperty = false;
                             }
@@ -275,6 +280,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 }
             }
         }
+
+
 
         return rejectProperty;
 
@@ -505,6 +512,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 		hiddenProperties = modelObj.definition.settings.hidden;
 		for(var key in modelProperties){
 			if(modelProperties.hasOwnProperty(key)){
+
 				//Add only if template is defined.
 				if(modelProperties[key].template !== undefined){
                     //Flag to track if to reject property or accept prop..
