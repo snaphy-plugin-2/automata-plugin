@@ -439,11 +439,46 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   - `where` `{Object}` Where query apply filter to show only specific data for relation search.  
     **Example**
     ```
+    {
+      name: "Customer",
     ...
+    relations:{
+        "post"{
+            "type": "hasOne",
+            "model": "Post",
+            "foreignKey": "",
+            templateOptions:{
+                ...
+                ...
+            }
+        },
+        "favouriteComment":{
+            "type": "hasOne",
+            "model": "Comment",
+            "foreignKey": "",
+            "templateOptions": {
+                "btnText": "Search Favourate Comments",
+                "searchProp": "answer",
+                "where":{
+                  "postId": {
+                    "relationName": "post",
+                    "relationKey": "id"
+                  }
+                },
+                "whereValidation":{
+                  "postId": "You need to first add a post before adding its favourite answer."
+                },
+                "create": false,
+                "id": "acceptedAnswerId"
+            }
+        }
+    }
+    
+    //Other example
     "where":{
-      "favouriteComment": {
+      "postId": {
         "relationName": "post",
-        "relationKey": "type",
+        "relationKey": "id",
         "key": "value"
       }
     }
@@ -452,13 +487,26 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
     ```
     Here, when adding any relation like `post` to main Model `Customer` is searched then `where` query filter will be applied on each search query and filter results will be shown only.  
     There are two different cases of writing `where` query in different scenario.
-      * When one relation `Relation A` is dependent on other relation `Relation B` and we have to show only those results of `Relation A` which are dependent on `Relation B` .  
-      For Example.  
-      Suppose there is a `Customer` which is related to a model `Post` to post any kind of summary or blog.  
-      Now this `Customer` model has also relation name  `favouriteComment` with model `Comment`. `favouriteComment` connects this `Post` with those `Comments` that author has checked it as his favourite one.  
-      When `Customer`  
-     
-  
+       1. When one relation `Relation A` is dependent on other relation `Relation B` and we have to show only those results of `Relation A` which are dependent on `Relation B` .  
+          For Example.  
+          * Suppose there is a `Customer` which is related to a model `Post` to post any kind of summary or blog.  
+          * Now this `Customer` model has also relation name  `favouriteComment` with model `Comment`. `favouriteComment` connects this `Post` with those `Comments` that author has checked it as his favourite one.  
+          * When a user searches to pick `favouriteComment` relation in `Customer` model then in search only those comments will be displayed which belongs to `Post` of current customer. 
+          * To facilitate it we will add a `where` property with `postId` as key as this `postId` is the foreign key name in model `Comment`.
+          * Now in `Customer` the value of `Post` model is present in `relationName` `post` and its relation key is `id` which is primary key of `Post` model.
+          * Thus here `relationName` will be `Post` and `relationKey` will be `id`.   
+       2. When a search filter of some static data is to be performed
+          * In this case simple `key` and its `value` is written.
+          * Example  
+          
+          ```
+          where:{
+              "type": private
+          }
+          ```
+      
+   
+   
   - `color` color of input elements. default is transparent. 
   - `colSize` Column Size of the template. Default is `col-md-12`,
   - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
