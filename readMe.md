@@ -271,8 +271,8 @@ To generate its form we have to defined a sub-property of `firstName` i.e. `temp
 ###Predefined Types
 All predefined Html input types defined using [Angular Formly][1] is mentioned here. You can also create any type.
 
-**input**  
-:  Input is used to display any input elements.
+####input  
+Input is used to display any input elements. of type <input id="firstName" > 
 ```
 "template": {
     "type": "input",
@@ -284,6 +284,81 @@ All predefined Html input types defined using [Angular Formly][1] is mentioned h
     }
 }
 ```
+**Options**
+1. `templateOptions` 
+  - `type` Html type for it could be like password|email|number|text etc
+  - `label` Placeholder or label text.
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `id` id of the html elements.
+  - `class` Class of the input element. Class is in format of ng-class. example: ["col-md-6", "exampleStyle"]
+  - `color` color of input elements. default is transparent. 
+  - `colSize` Column Size of the template. Default is `col-md-12`,
+  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
+  
+
+####textarea  
+Textarea of type <textarea id="firstName" ></textarea> 
+```
+"template": {
+    "type": "textarea",
+    "templateOptions": {
+      "type": "text",
+      "label": "Enter name",
+      "priority": 10,
+      "id": "firstName",
+      "row": 3
+    }
+}
+```
+**Options**
+1. `templateOptions` 
+  - `type` Html type for it could be like password|email|number|text etc
+  - `label` Placeholder or label text.
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `id` id of the html elements.
+  - `class` Class of the input element. Class is in format of ng-class. example: ["col-md-6", "exampleStyle"]
+  - `color` color of input elements. default is transparent. 
+  - `colSize` Column Size of the template. Default is `col-md-12`,
+  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
+  - `row` Row size for textarea elements. Numeric value.
+   
+   
+####select  
+Textarea of type <textarea id="firstName" ></textarea> 
+```
+"template": {
+    "type": "select",
+    "templateOptions": {
+      "type": "text",
+      "label": "Enter name",
+      "priority": 10,
+      "id": "firstName",
+      "options": {
+        "name": "demo",
+        "id": 1
+      }
+    }
+}
+```
+**Options**
+1. `templateOptions` 
+  - `type` Html type for it could be like password|email|number|text etc
+  - `label` Placeholder or label text.
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `id` id of the html elements.
+  - `class` Class of the input element. Class is in format of ng-class. example: ["col-md-6", "exampleStyle"]
+  - `color` color of input elements. default is transparent. 
+  - `colSize` Column Size of the template. Default is `col-md-12`,
+  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
+  - `option` Data value present in `options`. 
+  Options has two property.
+    - `name` Name of the options that will be displayed <options>{{name}}</options>
+    - `id` Value of options <options value="{{id}}">{{name}}</options>
+  
+  
+   
+
+
 
  
 
