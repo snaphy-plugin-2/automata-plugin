@@ -269,9 +269,10 @@ To generate its form we have to defined a sub-property of `firstName` i.e. `temp
   
 
 ###Predefined Types
-All predefined Html input types defined using [Angular Formly][1] is mentioned here. You can also create any type.
+All predefined html input types defined using [Angular Formly][1] is mentioned here. You can also create any type.
 
 ####input  
+> Use Cases: Ask user enter some text, email, passwords etc.
 Input is used to display any input elements. of type <input id="firstName" > 
 ```
 "template": {
@@ -298,6 +299,7 @@ Input is used to display any input elements. of type <input id="firstName" >
 
 ####textarea  
 Textarea of type <textarea id="firstName" ></textarea> 
+> Use Cases: Ask user to write some summary, comments etc.
 ```
 "template": {
     "type": "textarea",
@@ -324,6 +326,8 @@ Textarea of type <textarea id="firstName" ></textarea>
    
    
 ####select  
+> Use Cases: To select some options like country etc.
+
 Textarea of type <textarea id="firstName" ></textarea> 
 ```
 "template": {
