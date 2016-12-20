@@ -273,7 +273,7 @@ All predefined html input types defined using [Angular Formly][1] is mentioned h
 
 ####input  
 
-> Use Cases: Ask user enter some text, email, passwords etc  
+> Use Cases: Enter some text, email, passwords etc  
 
 Input is used to display any input elements. of type `<input id="firstName">` 
 ```
@@ -302,7 +302,7 @@ Input is used to display any input elements. of type `<input id="firstName">`
 ####textarea  
 Textarea of type `<textarea id="firstName" ></textarea>`
 
-> Use Cases: Ask user to write some summary, comments etc  
+> Use Cases: Write some summary, comments etc  
 
 ```
 "template": {
@@ -360,9 +360,9 @@ Textarea of type `<select id="firstName" ></select>`
   - `colSize` Column Size of the template. Default is `col-md-12`,
   - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
   - `option` Data value present in `options`. 
-  Options has two property.
-    - `name` Name of the options that will be displayed <options>{{name}}</options>
-    - `id` Value of options <options value="{{id}}">{{name}}</options>
+     Options has two property.
+    * `name` Name of the options that will be displayed <options>{{name}}</options>
+    * `id` Value of options <options value="{{id}}">{{name}}</options>
   
   
    
