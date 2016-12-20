@@ -556,6 +556,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
 By default relations automatically pick its default types from predefined types.  
 If current predefined type doesn't suit requirement then you can create your own template using [Angular Formly][1] and add it to the templateOptions object using `type` as property and its value. 
   
+2. `templateOptions`
      
 ####belongsTo  
 
