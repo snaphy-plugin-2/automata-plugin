@@ -368,6 +368,37 @@ Textarea of type `<select id="firstName" ></select>`
     * `name` Name of the options that will be displayed <options>{{name}}</options>
     * `id` Value of options <options value="{{id}}">{{name}}</options>
   
+     
+####selectString  
+
+> Use Cases: To select some options like country etc. Same as [Select](#select) with difference of asking `options` value.
+
+Textarea of type `<select id="firstName" ></select>` 
+```
+"template": {
+    "type": "select",
+    "templateOptions": {
+      "type": "text",
+      "label": "Enter name",
+      "priority": 10,
+      "id": "firstName",
+      "options": ["demo", "real"]
+    }
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `type` Html type for it could be like password|email|number|text etc
+  - `label` Placeholder or label text.
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `id` id of the html elements.
+  - `class` Class of the input element. Class is in format of ng-class. example: ["col-md-6", "exampleStyle"]
+  - `color` color of input elements. default is transparent. 
+  - `colSize` Column Size of the template. Default is `col-md-12`,
+  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
+  - `option` Data value present in `options`. `Array` of datatypes is accepted as options
+  
   
    
 
