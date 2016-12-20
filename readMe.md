@@ -1,7 +1,7 @@
-# automata plugin for Snaphy
+# Automata plugin for Snaphy
 
 
-### Plugin for automatic generating all CRUD methods to the UI.
+### Snaphy plugin for automatic generating all CRUD methods to to html, js of admin panel.
 
 ### This plugin is exposed on  `/automata` route
 
@@ -400,6 +400,67 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
   - `option` Data value present in `options`. `Array` of datatypes is accepted as options
   
+   
+     
+####belongsTo  
+
+> Use Cases: To define belongsTo and hasMany definition
+
+  
+   
+```
+{
+    ....
+    ....
+    "relations": {
+        "customer": {
+        "type": "belongsTo",
+        "model": "Customer",
+        "foreignKey": "",
+        "templateOptions": {
+            "btnText": "Add Customer",
+            "searchProp": "email",
+            "search": true,
+            "create": false,
+            "id": "customerIdName"
+        }
+    },
+    ....    
+    ....
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `btnText` Placeholder or label text.
+  - `searchProp` Property of the relation's `Model` which is about to be searched.  
+  - `search` `true|false`. Boolean value to select either show search suggestion to add any related model data.
+  - `create` `true|false`. Boolean value to select either to display a button to add any relation model if related model data not present in search.
+  - `hide` `true|false` To hide the relation box on initialize. By default it is set to `false`. 
+  - `display` `true|false` To remove the relation box from the `DOM` set it to false. by default its value is `true`.
+  - `where` `{Object}` Where query to show only specific data for relation search.  
+    **Example**
+    ```
+    ...
+    "where":{
+      "postId": {
+        "relationName": "post",
+        "relationKey": "id",
+        "key": "postId"
+      }
+    }
+    ...
+    ...
+    ```
+  
+  - `color` color of input elements. default is transparent. 
+  - `colSize` Column Size of the template. Default is `col-md-12`,
+  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
+  - `option` Data value present in `options`. `Array` of datatypes is accepted as options
+  
+  
+
+  
   
    
 
@@ -411,7 +472,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
  
 
 
-##snaphy plugin dependency
+#snaphy plugin dependency
 1. JqueryValidate
 
 
