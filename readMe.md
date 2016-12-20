@@ -528,11 +528,11 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
 
  
    
-###Predefined Type with model relations   
+##Predefined Type with model relations   
 
-#### Common Property for relations.  
+### Common Property for relations.  
 
-##### onCascadeDelete 
+#### onCascadeDelete 
 Boolean `true|false`. Default `false`.  
 Use to bind the relation model completely with current Model. In case current model is deleted then the relation model will get deleted automatically.  
 Example  
@@ -555,7 +555,7 @@ Example
 
 
 
-##### templateOptions
+#### templateOptions
 
 > In case of adding templateOption to relations.   
 By default relations automatically pick its default types from predefined types.  
