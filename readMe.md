@@ -271,7 +271,7 @@ To generate its form we have to defined a sub-property of `firstName` i.e. `temp
 ###Predefined Types
 All predefined Html input types defined using [Angular Formly][1] is mentioned here. You can also create any type.
 
-**input**
+**input**  
 :  Input is used to display any input elements.
 ```
 "template": {
