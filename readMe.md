@@ -221,9 +221,60 @@
 
 ```
 
-###### snaphy plugin dependency
+#How to auto-generate forms for admin panel using automata plugin.
+ 
+ >Each property will have several properties.
+  
+The server has several predefined paths to defined several functions.
+##Model Definition `/common/models/*.json`
+All the model `property` and its `relations` will be defined here.
+###Rules  
+Each property will have a sub-property `template`. `template` is the starting point to add several definitions and rules to a model's `property`.  
+**Example:**   
+let take a model `Order`.  
+`/common/models/order.json` will be model path where model definition is defined.  
+ Model name inside models folder is defined in `kebabCase`.
+```
+    {
+      "name": "Customer",
+      ....
+      ....
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "required": true,
+          "template": {
+            "type": "input",
+            "templateOptions": {
+              "type": "text",
+              "label": "Enter first name",
+              "priority": 10,
+              "id": "firstName"
+            }
+          }
+        },
+        ....
+        ....
+    }
+```
+Here, `firstName` is the name of property for model `Order`. 
+To generate its form we have to defined a sub-property of `firstName` i.e. `template`. 
+`template` will contain all the this property `firstName` definition of what will be html type of this property, id name etc.
+1. `template` Entry point for html form definition for each property.
+  - `type` it will define the html element of property defined using [Angular Formly][1].
+  All basic types are predefined for complex type  you can  define it using [Angular Formly][1] syntax rules. 
+  Here, firstName name will be an `input` element
+ 
+
+      
+ 
+
+
+##snaphy plugin dependency
 1. JqueryValidate
 
 
 
 #### Written by Robins Gupta
+
+[1]: http://angular-formly.com/ "Angular Formly"
