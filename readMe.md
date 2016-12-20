@@ -532,31 +532,35 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
 
 #### Common Property for relations.  
 
-1. `onCascadeDelete`: Use to bind the relation model completely with current Model. In case current model is deleted then the relation model will get deleted automatically.
-    Example
-    ```
-    {
-      ...
-      ...
-      "track": {
-          "type": "hasMany",
-          "model": "Track",
-          "foreignKey": "",
-          "onCascadeDelete": true,
-          "templateOptions": {
-            
-          }
-      },
-      ...
-    }
-    ```   
+##### onCascadeDelete 
+Boolean `true|false`. Default `false`.  
+Use to bind the relation model completely with current Model. In case current model is deleted then the relation model will get deleted automatically.  
+Example  
+```
+{
+  ...
+  ...
+  "track": {
+      "type": "hasMany",
+      "model": "Track",
+      "foreignKey": "",
+      "onCascadeDelete": true,
+      "templateOptions": {
+        
+      }
+  },
+  ...
+}
+```   
 
+
+
+##### templateOptions
 
 > In case of adding templateOption to relations.   
 By default relations automatically pick its default types from predefined types.  
 If current predefined type doesn't suit requirement then you can create your own template using [Angular Formly][1] and add it to the templateOptions object using `type` as property and its value. 
   
-2. `templateOptions`
      
 ####belongsTo  
 
