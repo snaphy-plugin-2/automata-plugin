@@ -221,7 +221,7 @@
 
 ```
 
-#How to auto-generate forms for admin panel using automata plugin.
+#How to auto-generate forms for admin panel webpage.
  
  >Each property will have several properties.
   
@@ -257,9 +257,9 @@ let take a model `Order`.
         ....
     }
 ```
-Here, `firstName` is the name of property for model `Order`. 
-To generate its form we have to defined a sub-property of `firstName` i.e. `template`. 
-`template` will contain all the this property `firstName` definition of what will be html type of this property, id name etc.
+:   Here, `firstName` is the name of property for model `Order`.   
+To generate its form we have to defined a sub-property of `firstName` i.e. `template`.   
+`template` will contain all the this property `firstName` definition of what will be html type of this property, id name etc.  
 1. `template` Entry point for html form definition for each property.
   - `type` it will define the html element of property defined using [Angular Formly][1].
   All basic types are predefined for complex type  you can  define it using [Angular Formly][1] syntax rules. 
