@@ -7,9 +7,9 @@
 
 
 ###`GetAbsoluteSchema` method
-1) Fetched the schema of any model.
+Used to fetch schema of any model.  
 ####Adding Schema based on `ACL`
-2) You can assign roles to restrict the property.Only dynamic and predefined loopback roles allowed. Now  static roles  are also allowed.
+You can assign roles to restrict the property.Only dynamic and predefined loopback roles allowed. Now  static roles  are also allowed.
 >Example
 
 ```
@@ -240,6 +240,11 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   - `option` Data value present in `options`. `Array` of datatypes is accepted as options
   
    
+###Predefined Type with model relations   
+   
+> In case of adding templateOption to relations. 
+And if current predefined type doesn't suit requirement then you can create your own template using [Angular Formly][1] and add it to the templateOptions object using `type` preporty and its value as used in adding property in above. 
+By default relations automatically pick its default types in case of `relation`     
      
 ####belongsTo  
 
@@ -344,18 +349,8 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
           }
           ```
       
-   
-   
-  - `color` color of input elements. default is transparent. 
-  - `colSize` Column Size of the template. Default is `col-md-12`,
-  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
-  - `option` Data value present in `options`. `Array` of datatypes is accepted as options
-  
-  
-
-  
-  
-   
+     
+####repeatSection  
 
 
 
