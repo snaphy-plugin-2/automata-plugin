@@ -379,7 +379,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
       "type": "multipleFileUpload",
       "templateOptions": {
         "label": "Add images",
-        "containerName": "orthopg",
+        "containerName": "containerName",
         "containerModel": "Container",
         "url": {
           "upload": "",
@@ -415,59 +415,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.   
   
       
-####singleFileUpload  
 
-> Use Cases: In case of uploading single image.
- 
-
-```
-{
-  ...
-  ...
-  "postImages": {
-    "type": [
-      "object"
-    ],
-    "template": {
-      "type": "multipleFileUpload",
-      "templateOptions": {
-        "label": "Add images",
-        "containerName": "containerName",
-        "containerModel": "Container",
-        "url": {
-          "upload": "",
-          "delete": ""
-        },
-        "bind": true,
-        "fullWidth": true,
-        "fileDataSource": "Image",
-        "onImageUpdate": {
-          "deletePrevious": true
-        }
-      }
-    }
-  },    
-  ...
-  ...
-}
-```
-**Options**  
-
-1. `templateOptions` 
-  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
-  - `label` Label showing add images.
-  - `containerName` Name of `Container` folder in case of localstorage or bucket in case of AWS S3 upload as defined in loopback.
-  - `containerModel` Model name where container is defined.
-  - `url` If upload is occuring to some other remote location then use this.
-     * `upload` Upload url
-     * `delete` Url to delete the files.
-  - `bind` To bind the current images with current model. If the current model is deleted from collection then  delete the images from server too.
-  - `onImageUpdate` Hook to be applied on image update.
-     * `deletePrevious` Delete the Previous image on image update.
-  - `fullWidth` `false|true` Display the images to its full width. default to `false`
-  - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.     
-  
-      
 ####singleFileUpload  
 
 > Use Cases: In case of uploading single image.
