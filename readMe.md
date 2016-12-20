@@ -239,12 +239,64 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
   - `option` Data value present in `options`. `Array` of datatypes is accepted as options
   
+     
+     
+####arrayValue  
+
+> Use Cases: Add some value whose type as defined in loopback is an `Array`  
+ 
+
+```
+"template": {
+    "type": "arrayValue",
+    "templateOptions": {
+      "btnText": "Add more data",
+      "name": "Ingredients",
+      "priority": 10,
+      "fields":[
+            {
+                "key": "keyName"
+                "type": "select",
+                "templateOptions": {
+                  "type": "text",
+                  "label": "Enter name",
+                  "priority": 10,
+                  "id": "firstName",
+                  "options": ["demo", "real"]
+                }
+            }
+      ]
+      "validation":{
+        "rules":{
+            
+        },
+        "messages":{
+            
+        }
+      }
+    }
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `type` Html type for it could be like password|email|number|text etc
+  - `label` Placeholder or label text.
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `id` id of the html elements.
+  - `class` Class of the input element. Class is in format of ng-class. example: ["col-md-6", "exampleStyle"]
+  - `color` color of input elements. default is transparent. 
+  - `colSize` Column Size of the template. Default is `col-md-12`,
+  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
+  - `option` Data value present in `options`. `Array` of datatypes is accepted as options
+  
    
 ###Predefined Type with model relations   
    
-> In case of adding templateOption to relations. 
-And if current predefined type doesn't suit requirement then you can create your own template using [Angular Formly][1] and add it to the templateOptions object using `type` preporty and its value as used in adding property in above. 
-By default relations automatically pick its default types in case of `relation`     
+> In case of adding templateOption to relations.   
+By default relations automatically pick its default types from predefined types.  
+If current predefined type doesn't suit requirement then you can create your own template using [Angular Formly][1] and add it to the templateOptions object using `type` as property and its value. 
+  
      
 ####belongsTo  
 
@@ -351,10 +403,43 @@ By default relations automatically pick its default types in case of `relation`
       
      
 ####repeatSection  
+> Use Cases: To define hasMany and hasAndBelongToMany definition
 
 
+```
+{
+    ....
+    ....
+    "relations": {
+        "post": {
+        "type": "hasMany",
+        "model": "Post",
+        "foreignKey": "",
+        "templateOptions": {
+            "btnText": "Search Post",
+            "searchProp": "title",
+            "search": true,
+            "create": false,
+            "id": "PostRelation",
+            "hide: false,
+            "label": "This a label or placeholder"
+        }
+    },
+    ....    
+    ....
+}
+```
+#####Options  
 
- 
+1. `templateOptions` 
+  - `btnText` Button label.
+  - `label` Placeholder or label.
+  - `searchProp` Property of the relation's `Model` which is about to be searched.  
+  - `search` `true|false`. Boolean value to select either show search suggestion to add any related model data.
+  - `create` `true|false`. Boolean value to select either to display a button to add any relation model if related model data not present in search.
+  - `hide` `true|false` To hide the relation box on initialize. By default it is set to `false`. 
+  - `display` `true|false` To remove the relation box from the `DOM` set it to false. by default its value is `true`.
+  
 
       
  
