@@ -535,7 +535,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
 #### onCascadeDelete 
 Boolean `true|false`. Default `false`.  
 Use to bind the relation model completely with current Model. In case current model is deleted then the relation model will get deleted automatically.  
-Example  
+Example
 ```
 {
   ...
