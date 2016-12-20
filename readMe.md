@@ -427,7 +427,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
     ....
 }
 ```
-**Options**  
+#####Options  
 
 1. `templateOptions` 
   - `btnText` Placeholder or label text.
@@ -441,7 +441,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
     ```
     ...
     "where":{
-      "postType": {
+      "favouriteComment": {
         "relationName": "post",
         "relationKey": "type",
         "key": "value"
@@ -453,9 +453,10 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
     Here, when adding any relation like `post` to main Model `Customer` is searched then `where` query filter will be applied on each search query and filter results will be shown only.  
     There are two different cases of writing `where` query in different scenario.
       * When one relation `Relation A` is dependent on other relation `Relation B` and we have to show only those results of `Relation A` which are dependent on `Relation B` .  
-      For Example.
-      Suppose there is a `Post` model to post any kind of summary or blog.  
-      Now this `Post` 
+      For Example.  
+      Suppose there is a `Customer` which is related to a model `Post` to post any kind of summary or blog.  
+      Now this `Customer` model has also relation name  `favouriteComment` with model `Comment`. `favouriteComment` connects this `Post` with those `Comments` that author has checked it as his favourite one.  
+      When `Customer`  
      
   
   - `color` color of input elements. default is transparent. 
