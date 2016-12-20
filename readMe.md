@@ -111,6 +111,23 @@ To generate its form we have to defined a sub-property of `firstName` i.e. `temp
 ###Predefined Types
 All predefined html input types defined using [Angular Formly][1] is mentioned here. You can also create any type.
 
+####dummy  
+
+> Use Cases: In case of readOnly only displaying in table and not editing.
+
+```
+"added": {
+  "type": "date",
+  "required": true,
+  "defaultFn": "now",
+  "template": {
+    "type": "dummy"
+  }
+},
+```
+
+  
+  
 ####input  
 
 > Use Cases: Enter some text, email, passwords etc  
@@ -169,6 +186,32 @@ Textarea of type `<textarea id="firstName" ></textarea>`
   - `colSize` Column Size of the template. Default is `col-md-12`,
   - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
   - `row` Row size for textarea elements. Numeric value.
+     
+
+####date  
+
+> Use Cases: For displaying dates.  
+
+```
+"eventDate": {
+  "type": "date",
+  "template": {
+    "type": "date",
+    "templateOptions": {
+      "label": "Add event date.",
+      "placeholder": "Enter event date"
+    }
+  }
+},
+```
+**Options**  
+
+1. `templateOptions` 
+  - `placeholder` "Placeholder text".
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `id` id of the html elements.
+  - `format` Date format to display. Default is `mm/dd/yyyy`.
+
    
    
 ####select  
@@ -265,7 +308,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
                   "options": ["demo", "real"]
                 }
             }
-      ]
+      ],
       "validation":{
         "rules":{
             
@@ -280,16 +323,262 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
 **Options**  
 
 1. `templateOptions` 
-  - `type` Html type for it could be like password|email|number|text etc
-  - `label` Placeholder or label text.
+  - `btnText` Button label to add more data.
+  - `name` of the array to specifying to remove this object.
   - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
-  - `id` id of the html elements.
-  - `class` Class of the input element. Class is in format of ng-class. example: ["col-md-6", "exampleStyle"]
-  - `color` color of input elements. default is transparent. 
-  - `colSize` Column Size of the template. Default is `col-md-12`,
-  - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
-  - `option` Data value present in `options`. `Array` of datatypes is accepted as options
+  - `fields` Array of object. Its contains all the defined fields which is present in the array.
+  - `validation` The validation object for array data types is defined here. Validation format is defined in detail in below.
   
+     
+####objectValue  
+
+> Use Cases: Add some property value of object types.  
+ 
+
+```
+"template": {
+    "type": "objectValue",
+    "templateOptions": {
+      "priority": 10,
+      "fields":[
+            {
+                "key": "keyName"
+                "type": "select",
+                "templateOptions": {
+                  "type": "text",
+                  "label": "Enter name",
+                  "priority": 10,
+                  "id": "firstName",
+                  "options": ["demo", "real"]
+                }
+            }
+      ]
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `fields` Array of object. Its contains all the defined fields which is present in the array.  
+  
+     
+####multipleFileUpload  
+
+> Use Cases: In case of uploading multiple images.
+ 
+
+```
+{
+  ...
+  ...
+  "postImages": {
+    "type": [
+      "object"
+    ],
+    "template": {
+      "type": "multipleFileUpload",
+      "templateOptions": {
+        "label": "Add images",
+        "containerName": "orthopg",
+        "containerModel": "Container",
+        "url": {
+          "upload": "",
+          "delete": ""
+        },
+        "bind": true,
+        "fullWidth": true,
+        "fileDataSource": "Image",
+        "onImageUpdate": {
+          "deletePrevious": true
+        }
+      }
+    }
+  },    
+  ...
+  ...
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `label` Label showing add images.
+  - `containerName` Name of `Container` folder in case of localstorage or bucket in case of AWS S3 upload as defined in loopback.
+  - `containerModel` Model name where container is defined.
+  - `url` If upload is occuring to some other remote location then use this.
+     * `upload` Upload url
+     * `delete` Url to delete the files.
+  - `bind` To bind the current images with current model. If the current model is deleted from collection then  delete the images from server too.
+  - `onImageUpdate` Hook to be applied on image update.
+     * `deletePrevious` Delete the Previous image on image update.
+  - `fullWidth` `false|true` Display the images to its full width. default to `false`
+  - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.   
+  
+      
+####singleFileUpload  
+
+> Use Cases: In case of uploading single image.
+ 
+
+```
+{
+  ...
+  ...
+  "postImages": {
+    "type": [
+      "object"
+    ],
+    "template": {
+      "type": "multipleFileUpload",
+      "templateOptions": {
+        "label": "Add images",
+        "containerName": "containerName",
+        "containerModel": "Container",
+        "url": {
+          "upload": "",
+          "delete": ""
+        },
+        "bind": true,
+        "fullWidth": true,
+        "fileDataSource": "Image",
+        "onImageUpdate": {
+          "deletePrevious": true
+        }
+      }
+    }
+  },    
+  ...
+  ...
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `label` Label showing add images.
+  - `containerName` Name of `Container` folder in case of localstorage or bucket in case of AWS S3 upload as defined in loopback.
+  - `containerModel` Model name where container is defined.
+  - `url` If upload is occuring to some other remote location then use this.
+     * `upload` Upload url
+     * `delete` Url to delete the files.
+  - `bind` To bind the current images with current model. If the current model is deleted from collection then  delete the images from server too.
+  - `onImageUpdate` Hook to be applied on image update.
+     * `deletePrevious` Delete the Previous image on image update.
+  - `fullWidth` `false|true` Display the images to its full width. default to `false`
+  - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.     
+  
+      
+####singleFileUpload  
+
+> Use Cases: In case of uploading single image.
+ 
+
+```
+{
+  ...
+  ...
+  "postImages": {
+    "type": [
+      "object"
+    ],
+    "template": {
+      "type": "singleFileUpload",
+      "templateOptions": {
+        "label": "Add images",
+        "containerName": "containerName",
+        "containerModel": "Container",
+        "url": {
+          "upload": "",
+          "delete": ""
+        },
+        "bind": true,
+        "fullWidth": true,
+        "fileDataSource": "Image",
+        "onImageUpdate": {
+          "deletePrevious": true
+        }
+      }
+    }
+  },    
+  ...
+  ...
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `label` Label showing add images.
+  - `containerName` Name of `Container` folder in case of localstorage or bucket in case of AWS S3 upload as defined in loopback.
+  - `containerModel` Model name where container is defined.
+  - `url` If upload is occuring to some other remote location then use this.
+     * `upload` Upload url
+     * `delete` Url to delete the files.
+  - `bind` To bind the current images with current model. If the current model is deleted from collection then  delete the images from server too.
+  - `onImageUpdate` Hook to be applied on image update.
+     * `deletePrevious` Delete the Previous image on image update.
+  - `fullWidth` `false|true` Display the images to its full width. default to `false`
+  - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.   
+  
+  
+  
+     
+####singlePDFUpload  
+
+> Use Cases: In case of uploading single PDF file to server.
+ 
+
+```
+{
+  ...
+  ...
+  "postImages": {
+    "type": [
+      "object"
+    ],
+    "template": {
+      "type": "singlePDFUpload",
+      "templateOptions": {
+        "label": "Add images",
+        "containerName": "containerName",
+        "containerModel": "Container",
+        "url": {
+          "upload": "",
+          "delete": ""
+        },
+        "bind": true,
+        "fullWidth": true,
+        "fileDataSource": "Image",
+        "onImageUpdate": {
+          "deletePrevious": true
+        }
+      }
+    }
+  },    
+  ...
+  ...
+}
+```
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `label` Label showing add images.
+  - `containerName` Name of `Container` folder in case of localstorage or bucket in case of AWS S3 upload as defined in loopback.
+  - `containerModel` Model name where container is defined.
+  - `url` If upload is occuring to some other remote location then use this.
+     * `upload` Upload url
+     * `delete` Url to delete the files.
+  - `bind` To bind the current images with current model. If the current model is deleted from collection then  delete the images from server too.
+  - `onImageUpdate` Hook to be applied on image update.
+     * `deletePrevious` Delete the Previous image on image update.
+  - `fullWidth` `false|true` Display the images to its full width. default to `false`
+  - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.   
+  
+  
+  
+
+ 
    
 ###Predefined Type with model relations   
    
