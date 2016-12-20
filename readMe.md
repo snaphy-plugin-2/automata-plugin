@@ -406,23 +406,21 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
 
 > Use Cases: To define belongsTo and hasMany definition
 
-  
-   
 ```
 {
     ....
     ....
     "relations": {
-        "customer": {
+        "post": {
         "type": "belongsTo",
-        "model": "Customer",
+        "model": "Post",
         "foreignKey": "",
         "templateOptions": {
-            "btnText": "Add Customer",
-            "searchProp": "email",
+            "btnText": "Search Post",
+            "searchProp": "title",
             "search": true,
             "create": false,
-            "id": "customerIdName"
+            "id": "PostRelation"
         }
     },
     ....    
@@ -438,20 +436,27 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   - `create` `true|false`. Boolean value to select either to display a button to add any relation model if related model data not present in search.
   - `hide` `true|false` To hide the relation box on initialize. By default it is set to `false`. 
   - `display` `true|false` To remove the relation box from the `DOM` set it to false. by default its value is `true`.
-  - `where` `{Object}` Where query to show only specific data for relation search.  
+  - `where` `{Object}` Where query apply filter to show only specific data for relation search.  
     **Example**
     ```
     ...
     "where":{
-      "postId": {
+      "postType": {
         "relationName": "post",
-        "relationKey": "id",
-        "key": "postId"
+        "relationKey": "type",
+        "key": "value"
       }
     }
     ...
     ...
     ```
+    Here, when adding any relation like `post` to main Model `Customer` is searched then `where` query filter will be applied on each search query and filter results will be shown only.  
+    There are two different cases of writing `where` query in different scenario.
+      * When one relation `Relation A` is dependent on other relation `Relation B` and we have to show only those results of `Relation A` which are dependent on `Relation B` .  
+      For Example.
+      Suppose there is a `Post` model to post any kind of summary or blog.  
+      Now this `Post` 
+     
   
   - `color` color of input elements. default is transparent. 
   - `colSize` Column Size of the template. Default is `col-md-12`,
