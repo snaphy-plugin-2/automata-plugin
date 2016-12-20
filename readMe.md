@@ -349,7 +349,7 @@ Textarea of type `<select id="firstName" ></select>`
     }
 }
 ```
-**Options**
+**Options**  
 1. `templateOptions` 
   - `type` Html type for it could be like password|email|number|text etc
   - `label` Placeholder or label text.
