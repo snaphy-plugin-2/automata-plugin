@@ -371,9 +371,10 @@ Textarea of type `<select id="firstName" ></select>`
      
 ####selectString  
 
-> Use Cases: To select some options like country etc. Same as [Select](#select) with difference of asking `options` value.
+> Use Cases: To select some options like country etc.
 
-Textarea of type `<select id="firstName" ></select>` 
+Textarea of type `<select id="firstName" ></select>`.  
+Same as [Select](#select) with difference of asking `options` value as `Array` type instead of `Object`.   
 ```
 "template": {
     "type": "select",
