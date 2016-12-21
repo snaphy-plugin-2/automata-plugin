@@ -412,7 +412,10 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   - `onImageUpdate` Hook to be applied on image update.
      * `deletePrevious` Delete the Previous image on image update.
   - `fullWidth` `false|true` Display the images to its full width. default to `false`
-  - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.   
+  - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.  
+
+> Validation for multiple image upload is still in process of implementation.  
+
   
       
 
@@ -434,6 +437,7 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
       "templateOptions": {
         "label": "Add images",
         "containerName": "containerName",
+        "id": "fileUploadId",
         "containerModel": "Container",
         "url": {
           "upload": "",
@@ -467,6 +471,23 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
      * `deletePrevious` Delete the Previous image on image update.
   - `fullWidth` `false|true` Display the images to its full width. default to `false`
   - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.   
+  - `id` Used for applying validation to image upload.  
+  
+  **Example**
+  ```
+    "validationsBackend": {
+        "rules": {
+          "postImages": {
+            "required": true
+          }
+        },
+        "messages": {
+          "postImages": {
+            "required": "postImages  is required."
+          }
+        }
+      }
+  ```
   
   
   
@@ -522,7 +543,22 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
      * `deletePrevious` Delete the Previous image on image update.
   - `fullWidth` `false|true` Display the images to its full width. default to `false`
   - `fileDataSource` DataSource name defined in loopback at location `/server/datasources.json`.   
-  
+  - `id` Used for applying validation to image upload.  
+  **Example**
+  ```
+    "validationsBackend": {
+        "rules": {
+          "postImages": {
+            "required": true
+          }
+        },
+        "messages": {
+          "postImages": {
+            "required": "postImages  is required."
+          }
+        }
+      }
+  ```
   
   
 
@@ -595,7 +631,26 @@ Example
   - `search` `true|false`. Boolean value to select either show search suggestion to add any related model data.
   - `create` `true|false`. Boolean value to select either to display a button to add any relation model if related model data not present in search.
   - `hide` `true|false` To hide the relation box on initialize. By default it is set to `false`. 
-  - `display` `true|false` To remove the relation box from the `DOM` set it to false. by default its value is `true`.
+  - `display` `true|false` To remove the relation box from the `DOM` set it to false. by default its value is `true`.  
+  - `id` Used to apply JqueryValidation to the related belongTo relation search. In case of relation validation apply relation name in place of validation key.
+  **Example**
+  ```
+  //For relation `post` apply validation like this.
+  "validationsBackend": {
+      "rules": {
+        "post": {
+          "required": true,
+          "valueNotEquals": ""
+        }
+      },
+      "messages": {
+        "post": {
+          "required": "Customer is required",
+          "valueNotEquals": "Customer is required"
+        }
+      }
+    }
+  ```
   - `where` `{Object}` Where query apply filter to show only specific data for relation search.  
     **Example**
     ```
