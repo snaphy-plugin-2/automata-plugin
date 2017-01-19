@@ -72,7 +72,6 @@ var addSaveMethod = function(app, modelName) {
         }
         if (data.id === undefined) {
             //Now save/update the data..
-
             modelObj.create(data)
                 .then(function(instance) {
                     removeData (instance, removeParams, function(err, dataInstance){
