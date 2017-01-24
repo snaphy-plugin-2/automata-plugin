@@ -249,6 +249,12 @@ Textarea of type `<select id="firstName" ></select>`
      Options has two property.
     * `name` Name of the options that will be displayed <options>{{name}}</options>
     * `id` Value of options <options value="{{id}}">{{name}}</options>
+  - `model` `{model: "Model Name", 
+       value: "Key name of property which is value usually it is the id", 
+       name: "key name of property name which is going to be displayed", 
+       filter: {} //Filter for fetching data dynamically
+     }`
+     For fetching data dynamically from a `loopback model`
   
      
 ####selectString  
@@ -651,6 +657,8 @@ Example
       }
     }
   ```
+  
+  - `load` `{Boolean}` Default false if set true will load all data at once on initialize and dont load data dynamically.    
   - `where` `{Object}` Where query apply filter to show only specific data for relation search.  
     **Example**
     ```
