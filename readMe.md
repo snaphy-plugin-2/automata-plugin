@@ -622,7 +622,19 @@ Example
             "searchProp": "title",
             "search": true,
             "create": false,
-            "id": "PostRelation"
+            "id": "PostRelation",
+            displayProperty:[
+                {
+                    prefix: "PostedBy"
+                },
+                {
+                    name: "name"
+                },
+                {
+                    suffix: "Author"
+                }
+                //Will display PostedBy ${name} Author in search results.
+            ]
         }
     },
     ....    
@@ -659,7 +671,13 @@ Example
   ```
   
   - `load` `{Boolean}` Default false if set true will load all data at once on initialize and dont load data dynamically.    
-  - `where` `{Object}` Where query apply filter to show only specific data for relation search.  
+  - `displayProperty` `{[{}]}` Set the prefix or suffix either static data or from the model data of related model.
+      - `prefix` : If set will add static string value to prefix of the search property results.
+      - `name`   : If set will add dynamic string value from related model data.
+      - `suffix` : If set will add static string value at suffix to related model data.
+
+
+  - `where` `{Object}` Where query apply filter to show only specific data for relation search.
     **Example**
     ```
     {
