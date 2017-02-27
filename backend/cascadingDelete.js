@@ -16,7 +16,7 @@ var onCascadeDelete = function(server, modelName){
                         var lowercaseModelName = deCapitalizeFirstLetter(relationProp.model);
                         foreignKey = lowercaseModelName + "Id";
                     }
-                    deleteRelations (app, modelObj, foreignKey, relationProp, relationName);
+                    deleteRelations (app, modelObj, foreignKey, relationProp, relationName, modelName);
 
                 }
             }
@@ -29,7 +29,7 @@ var onCascadeDelete = function(server, modelName){
 var deleteRelations = function(app, modelObj, foreignKey, relationProp, relationName, modelName){
     var relationType = relationProp.type;
     if(relationType === "hasOne"){
-        handleHasOne(app, modelObj, foreignKey, relationProp, relationName);
+        handleHasOne(app, modelObj, foreignKey, relationProp, relationName, modelName);
     }
     else if(relationType === "belongsTo"){
         handleBelongsTo(app, modelObj, foreignKey, relationProp, relationName);
@@ -56,7 +56,7 @@ function deCapitalizeFirstLetter(string) {
 
 
 
-var handleHasOne = function(app, modelObj, foreignKey, relationProp, relationName){
+var handleHasOne = function(app, modelObj, foreignKey, relationProp, relationName, modelName){
     return (function(app, modelObj, foreignKey, relationProp){
         var relatedModel = relationProp.model;
         var relatedModelObj = app.models[relatedModel];
@@ -66,13 +66,9 @@ var handleHasOne = function(app, modelObj, foreignKey, relationProp, relationNam
                 where: where
             })
             .then(function(modelInstanceArr){
-                //console.log(modelInstanceArr);
-                //console.log(foreignKey);
                 modelInstanceArr.forEach(function(modelInstance){
                     //Remove the related model..
-
-                    deleteHasOneFinally(modelInstance, foreignKey, relatedModelObj, next);
-
+                    deleteHasOneFinally(app, modelInstance, foreignKey, relatedModelObj, modelName, next);
                 });
 
             })
@@ -87,10 +83,16 @@ var handleHasOne = function(app, modelObj, foreignKey, relationProp, relationNam
 
 
 
-var deleteHasOneFinally = function(modelInstance, foreignKey, relatedModelObj, next){
+var deleteHasOneFinally = function(app, modelInstance, foreignKey, relatedModelObj, modelName,  next){
     if(modelInstance){
+    	//In case of hasOne prepare te foreign key from currrent deleted mode in related model to find model.
+		var relatedModelId = modelName.toLowerCase() + "Id";
+		var where = {};
+		where[relatedModelId] = modelInstance.id;
         //Find the element..
-        relatedModelObj.findById(modelInstance[foreignKey], {}, function(err, instance){
+        relatedModelObj.findOne({
+        	where:where
+        }, function(err, instance){
             if(instance){
                 instance.destroy(function(err){
                     if(err){
