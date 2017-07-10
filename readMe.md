@@ -32,6 +32,22 @@ You can assign roles to restrict the property.Only dynamic and predefined loopba
               "acl":{
                 "allow":[],
                 "reject": ["BrandStaff", "BrandAdmin"]
+              },
+              //Reject edit access for relations..
+              "relations":{
+                "allow":[],
+                //Remove relations completely from all
+                "reject": ["BrandStaff", "BrandAdmin"]
+              },
+              "header":{
+                "allow":[],
+                //Remove from table..
+                "reject": ["BrandStaff", "BrandAdmin"]
+              },
+              "fields":{
+              //Only remove from edit side..
+                "allow":[],
+                "reject": ["BrandStaff", "BrandAdmin"]
               }
             }
           }

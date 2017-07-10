@@ -233,9 +233,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
      * Check if the property has allow role or reject role..
      * @param propertyObj Loopback model property obj
      * @param roleList list of roles defined for current logged user..loopback.currentContext
+	 * @param type {String} Enum either [header, fields, relations, tables]
+	 * Used For applying allow or remove specifically to provided properties type.
      * @returns {boolean} false if property is allowed and true if it is rejected..
      */
-    const checkPropertyAccess = function(propertyObj, roleList){
+    const checkPropertyAccess = function(propertyObj, roleList, type){
         if(!roleList){
             roleList = [];
         }
@@ -244,48 +246,91 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         if(propertyObj.templateOptions){
             if(propertyObj.templateOptions.acl){
                 if(propertyObj.templateOptions.acl.reject){
-                    let found = _.find(propertyObj.templateOptions.acl.reject, function(rejectedRole) {
-                        for(let i=0; i < roleList.length; i++){
-                            let userRole = roleList[i];
-                            //If current role is in reject role..then reject the role..
-                            if(userRole === rejectedRole){
-                                return true;
-                            }
-                        }
-                        return false;
-                    });
+					rejectProperty = matchAccess(propertyObj.templateOptions.acl, roleList);
+                }
 
-                    //Now check if current role is also present in allow role list
-                    if(found){
-                        rejectProperty = true;
-                        if(propertyObj.templateOptions.acl.allow) {
-                            let found = _.find(propertyObj.templateOptions.acl.allow, function(allowedRole) {
-                                for(let i=0; i < roleList.length; i++){
-                                    let userRole = roleList[i];
-                                    //If current role is in reject role..then reject the role..
-                                    if(userRole === allowedRole){
-                                        return true;
-                                    }
-                                }
-                                return false;
-                            });
-
-
-
-                            if(found) {
-                                rejectProperty = false;
-                            }
-                        }
+                //Check for specifically defined types..
+                if(propertyObj.templateOptions.acl[type]){
+                    if(propertyObj.templateOptions.acl[type].reject){
+                        rejectProperty = matchAccess(propertyObj.templateOptions.acl[type], roleList);
                     }
                 }
             }
         }
-
-
-
         return rejectProperty;
-
     };
+
+
+    /**
+     * Check if a relation data is allowed for edit or not..
+     * @param propertyObj Loopback model property obj
+     * @param roleList list of roles defined for current logged user..loopback.currentContext
+     * Used For applying allow or remove specifically to provided properties type.
+     * @returns {boolean} false if property is allowed and true if it is rejected..
+     */
+    const checkRelationEditAccess = function(propertyObj, roleList){
+        if(!roleList){
+            roleList = [];
+        }
+
+        let rejectProperty = false;
+        if(propertyObj.templateOptions){
+            if(propertyObj.templateOptions.acl){
+                //Check for specifically defined types..
+                if(propertyObj.templateOptions.acl["relations"]){
+                    if(propertyObj.templateOptions.acl["relations"].reject){
+                        rejectProperty = matchAccess(propertyObj.templateOptions.acl["relations"], roleList);
+                    }
+                }
+            }
+        }
+        return rejectProperty;
+	};
+
+
+    /**
+	 * Match the current ACL object having allow and reject array with data.
+     * @param aclObject { {reject:Array, allow: Array } }
+     * @param roleList {Array}
+     * @returns {boolean}
+     */
+    const matchAccess = function(aclObject, roleList){
+    	let rejectProperty = false;
+        let found = _.find(aclObject.reject, function(rejectedRole) {
+            for(let i=0; i < roleList.length; i++){
+                let userRole = roleList[i];
+                //If current role is in reject role..then reject the role..
+                if(userRole === rejectedRole){
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        //Now check if current role is also present in allow role list
+        if(found){
+            rejectProperty = true;
+            if(aclObject.allow) {
+                let found = _.find(aclObject.allow, function(allowedRole) {
+                    for(let i=0; i < roleList.length; i++){
+                        let userRole = roleList[i];
+                        //If current role is in reject role..then reject the role..
+                        if(userRole === allowedRole){
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+
+
+
+                if(found) {
+                    rejectProperty = false;
+                }
+            }
+        }
+        return rejectProperty;
+	};
 
 
 
@@ -309,7 +354,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				var relationObj = relations[relationName];
 				var modelName       = relationObj.model;
                 //Flag to track if to reject property or accept prop..
-                var rejectProperty = checkPropertyAccess(relationObj, roleList);
+                var rejectProperty = checkPropertyAccess(relationObj, roleList, "relations");
 
                 if(rejectProperty){
                     //Skip this property..
@@ -463,8 +508,13 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						//add schema
 						addNestedModelRelation(app, relatedHeader, belongsToSchema.templateOptions, relatedModelRelations, relationObj.model);
 					}
-					//Now add this to the schema..
-					schema.fields.push(belongsToSchema);
+
+					const checkRelationEditAccess = checkRelationEditAccess(relationObj, roleList);
+					//Only allow if reject value is set to be false..
+					if(!checkRelationEditAccess){
+                        //Now add this to the schema..
+                        schema.fields.push(belongsToSchema);
+					}
 				}
 
 			}
@@ -516,7 +566,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				//Add only if template is defined.
 				if(modelProperties[key].template !== undefined){
                     //Flag to track if to reject property or accept prop..
-                    let rejectProperty = checkPropertyAccess(modelProperties[key].template, roleList);
+                    let rejectProperty = checkPropertyAccess(modelProperties[key].template, roleList, "header");
                     //Only allow if reject prop value is false..
                     if(!rejectProperty){
                         var propIsHidden = false;
@@ -606,7 +656,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				var propObj = modelProperties[propertyName].template;
 				if(propObj !== undefined){
                     //Flag to track if to reject property or accept prop..
-                    let rejectProperty = checkPropertyAccess(propObj, roleList);
+                    let rejectProperty = checkPropertyAccess(propObj, roleList, "fields");
 
 
                     //Add property only if rejectProperty value is false..
