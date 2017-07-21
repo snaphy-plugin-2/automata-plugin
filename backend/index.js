@@ -509,9 +509,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						addNestedModelRelation(app, relatedHeader, belongsToSchema.templateOptions, relatedModelRelations, relationObj.model);
 					}
 
-					const checkRelationEditAccess = checkRelationEditAccess(relationObj, roleList);
+					const checkRelationEditAccess_ = checkRelationEditAccess(relationObj, roleList);
 					//Only allow if reject value is set to be false..
-					if(!checkRelationEditAccess){
+					if(!checkRelationEditAccess_){
                         //Now add this to the schema..
                         schema.fields.push(belongsToSchema);
 					}
