@@ -178,21 +178,21 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			if(ctx.query.where){
 				for(var whereProp in ctx.query.where){
 					if(ctx.query.where.hasOwnProperty(whereProp)){
-						var like = ctx.query.where[whereProp].like;
-						if(like){
-							var patt= /\/.*\//;
-							if(patt.test(like)){
-								//Regex already present..
-								//do nothing..
-
-							}else{
-
-								var pattern = new RegExp(''+like+'.*', "i"); /* case-insensitive RegExp search */
-								//Now modifying the like property..
-								ctx.query.where[whereProp].like = pattern;
+						if(whereProp){
+							if(ctx.query.where[whereProp]){
+                                var like = ctx.query.where[whereProp].like;
+                                if(like){
+                                    var patt= /\/.*\//;
+                                    if(patt.test(like)){
+                                        //Regex already present..
+                                        //do nothing..
+                                    }else{
+                                        var pattern = new RegExp(''+like+'.*', "i"); /* case-insensitive RegExp search */
+                                        //Now modifying the like property..
+                                        ctx.query.where[whereProp].like = pattern;
+                                    }
+                                }
 							}
-
-
 						}
 					}
 				}
