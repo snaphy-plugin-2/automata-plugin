@@ -115,7 +115,7 @@ var deleteHasOneFinally = function(app, modelInstance, foreignKey, relatedModelO
 
 var handleBelongsTo = function(app, modelObj, foreignKey, relationProp, relationName){
     return (function(app, modelObj, foreignKey, relationProp, relationName){
-        console.log("Inside belongsTo remove");
+        //console.log("Inside belongsTo remove");
         modelObj.observe("before delete", function(ctx, next){
             var where = ctx.where;
             modelObj.find({

@@ -52,6 +52,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			let relations = modelObj.definition.settings.relations,
 				filters,
 				tables,
+                settings,
 				widgets;
 
 			const tableObj = helper.getTableJson(modelName);
@@ -66,7 +67,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				if(tableObj.filters){
 					filters = tableObj.filters;
 				}
-			}
+                if(tableObj.settings){
+                    settings = tableObj.settings;
+                }
+
+            }
 
 			/**
 			 * Now form the desired schema and return it.
@@ -82,6 +87,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			schema.filters = filters;
 			schema.tables  = tables;
 			schema.widgets  = widgets;
+			schema.settings  = settings;
 
 			callback(null, schema);
 		};
@@ -93,6 +99,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			let relations = modelObj.definition.settings.relations,
 			filters,
 			tables,
+			settings,
 			widgets;
 
 			//Load login plugin get roles method..
@@ -115,6 +122,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             if(tableObj.filters){
                                 filters = tableObj.filters;
                             }
+                            if(tableObj.settings){
+                                settings = tableObj.settings;
+                            }
                         }
 
 
@@ -135,6 +145,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                         schema.filters = filters;
                         schema.tables  = tables;
                         schema.widgets  = widgets;
+                        schema.settings  = settings;
 
                         if(schema.fields){
                             //Sort the fields..
