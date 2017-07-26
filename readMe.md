@@ -803,6 +803,98 @@ Example
   
 
 
+##Filter
+
+ ```
+ {
+     "filters": {
+         "recipeType": {
+           "type": "$radio",
+           "label": "Select recipe type",
+           "options": [
+             {
+               "id": 1,
+               "name": "veg"
+             },
+             {
+               "id": 2,
+               "name": "nonveg"
+             },
+             {
+               "id": 3,
+               "name": "egg"
+             }
+           ]
+         },
+         "added": {
+           "type": "$date",
+           "label": "Recipe added between"
+         },
+         "status": {
+           "type": "$select",
+           "label": "Select recipe status",
+           "options": [
+             {
+               "id": 1,
+               "name": "publish"
+             },
+             {
+               "id": 2,
+               "name": "onhold"
+             },
+             {
+               "id": 3,
+               "name": "rejected"
+             }
+           ]
+         },
+         "servings": {
+           "type": "$multiSelect",
+           "label": "Select recipe servings",
+           "getOptionsFromColumn": false,
+           "options": [
+             {
+               "id": "1",
+               "name": "1"
+             },
+             {
+               "id": "2",
+               "name": "2"
+             },
+             {
+               "id": "3",
+               "name": "3"
+             },
+             {
+               "id": "4",
+               "name": "4"
+             },
+             {
+               "id": "5",
+               "name": "5"
+             }
+           ]
+         }
+         //Suppose departmentId select  value was to be fetched from some remote url method.
+         "departmentId":{
+            "type":"$remoteUrl",
+            "label":"Select Department",
+            "default": "", //some default value which you want to select,
+            "disabled": Boolean, //which means to disabled the select element by default.
+            "url": "/getAllDepartment",
+            "method":"get|post"
+            "data":{
+                //Only required if post in case of json data
+            },
+            broadcast:"OnDepartmentFetched" //event to be broadcast when data has been fetched. successfully from remote url.
+                                            //with value {schema, data} schema will contain the schema object and data will contain the data object.
+         }
+   }
+ ```
+
+
+
+
 #Future docs coming.
 1. Validation
 2. Table
