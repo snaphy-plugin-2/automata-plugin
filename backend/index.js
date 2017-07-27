@@ -51,12 +51,31 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                                 model: modelName,
                                 role: {
                                     inq: roles
-                                },
-								include:["snaphyACLProps", "snaphyACLRelations"]
-							}
+                                }
+							},
+                            include:["snaphyACLProps", "snaphyACLRelations"]
                         })
                             .then(function (snaphyACL) {
-                                resolve(snaphyACL);
+                            	if(snaphyACL){
+                                    const aclObj = snaphyACL.toJSON();
+                                    if(snaphyACL.snaphyACLProps()){
+                                        aclObj.snaphyACLProps = {};
+										snaphyACL.snaphyACLProps().forEach(function (aclProp) {
+                                            aclObj.snaphyACLProps[aclProp.name] = aclProp;
+                                        });
+									}
+
+                                    if(snaphyACL.snaphyACLRelations()){
+                                        aclObj.snaphyACLRelations = {};
+                                        snaphyACL.snaphyACLRelations().forEach(function (aclrelation) {
+                                            aclObj.snaphyACLRelations[aclrelation.relation] = aclrelation;
+                                        });
+                                    }
+                                    resolve(aclObj);
+								}else{
+                                    resolve(snaphyACL);
+								}
+
                             })
                             .catch(function (error) {
                                 reject(error);
@@ -214,6 +233,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 if(tableObj.filters){
                     filters = tableObj.filters;
                 }
+                tableObj.settings = tableObj.settings || {};
                 if(tableObj.settings){
                     settings = tableObj.settings;
                     if(snaphyACL){
@@ -257,13 +277,13 @@ module.exports = function( server, databaseObj, helper, packageObj) {
             /**
              * Now form the desired schema and return it.
              */
-            var header = addPropToHeader(app, modelName, '', [], false, roleList),
+            var header = addPropToHeader(app, modelName, '', [], false, roleList, snaphyACL),
                 //Get template structure..
-                schema = generateTemplateStr(app, modelName, null, roleList);
+                schema = generateTemplateStr(app, modelName, null, roleList, snaphyACL);
 
 
             //Now recursively add relations to the models...
-            addNestedModelRelation(app, header, schema, relations, modelName, true, roleList);
+            addNestedModelRelation(app, header, schema, relations, modelName, true, roleList, snaphyACL);
 
             //Now add filters and tables and headers to the model..
             schema.header  = header;
@@ -341,6 +361,88 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
 
     /**
+	 * Check the dynamic property access of the role.
+     * @param propName
+     * @param prefix {String} if related table has to restrict.
+     * @param roleList
+     * @param snaphyACL
+     * @param type
+     */
+	const checkDynamicPropertyAccess = function(propName, prefix, roleList, snaphyACL, type){
+        let rejectProperty = false;
+		if(propName){
+			if(snaphyACL){
+				if(snaphyACL.snaphyACLProps){
+					if(prefix) {
+                        const relatedAclPropObj = snaphyACL.snaphyACLProps[prefix +'.'+propName];
+                        if(relatedAclPropObj){
+                        	if(type === "header"){
+                                if(relatedAclPropObj.read){
+                                    if(relatedAclPropObj.read === "allow"){
+                                        rejectProperty = false;
+                                    }else if(relatedAclPropObj.read === "deny"){
+                                        rejectProperty = true;
+                                    }
+                                }
+							}
+
+							if(type === "fields"){
+                                if(relatedAclPropObj.write){
+                                    if(relatedAclPropObj.write === "allow"){
+                                        rejectProperty = false;
+                                    }else if(relatedAclPropObj.write === "deny"){
+                                        rejectProperty = true;
+                                    }
+                                }
+							}
+                        }
+					}else {
+                        const aclPropObj = snaphyACL.snaphyACLProps[propName];
+                        if(aclPropObj){
+                            if(type === "header") {
+                                if (aclPropObj.read) {
+                                    if (aclPropObj.read === "allow") {
+                                        rejectProperty = false;
+                                    } else if (aclPropObj.read === "deny") {
+                                        rejectProperty = true;
+                                    }
+                                }
+                            }
+
+                            if(type === "fields"){
+                                if(aclPropObj.write){
+                                    if(aclPropObj.write === "allow"){
+                                        rejectProperty = false;
+                                    }else if(aclPropObj.write === "deny"){
+                                        rejectProperty = true;
+                                    }
+                                }
+                            }
+
+                        }
+					}
+
+				}
+
+                if(type === "relations"){
+					if(snaphyACL.snaphyACLRelations){
+                        const aclRelationObj = snaphyACL.snaphyACLRelations[propName];
+                        if(aclRelationObj){
+                            if(aclRelationObj.execute === "deny"){
+                                rejectProperty = true;
+                            }
+						}
+                    }
+				}
+
+			}
+		}
+
+		return rejectProperty;
+	};
+
+
+    /**
      * Check if the property has allow role or reject role..
      * @param propertyObj Loopback model property obj
      * @param roleList list of roles defined for current logged user..loopback.currentContext
@@ -402,7 +504,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
     /**
 	 * Match the current ACL object having allow and reject array with data.
      * @param aclObject { {reject:Array, allow: Array } }
-     * @param roleList {Array}
+     * @param roleList {Array},
      * @returns {boolean}
      */
     const matchAccess = function(aclObject, roleList){
@@ -440,6 +542,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 }
             }
         }
+
+
+        //Adding ACL from Website dynamically..
+
         return rejectProperty;
 	};
 
@@ -456,8 +562,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param rootModelName model name of the root
 	 * @param absoluteSchema {boolean} if the request is for absolute schema or getSchema
 	 * @param roleList {[string]} list of roles assigned to current logged user..
+	 * @param snaphyACL
      */
-	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema, roleList){
+	var addNestedModelRelation = function(app, header, schema, relations, rootModelName, absoluteSchema, roleList, snaphyACL){
 
 		//Now adding  prop of belongTo and hasMany method to the header and schema respectfully...
 		for(var relationName in relations){
@@ -466,8 +573,8 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				var modelName       = relationObj.model;
                 //Flag to track if to reject property or accept prop..
                 var rejectProperty = checkPropertyAccess(relationObj, roleList, "relations");
-
-                if(rejectProperty){
+				var dynamicRejectProperty = checkDynamicPropertyAccess(relationName, '', roleList, snaphyACL, "relations");
+                if(rejectProperty || dynamicRejectProperty){
                     //Skip this property..
                     continue;
                 }
@@ -579,10 +686,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				if((relationObj.type === 'hasOne' || relationObj.type === 'belongsTo') && relationObj.templateOptions !== undefined){
 					if(absoluteSchema){
 						//Now add its properties to the header..
-						header = addPropToHeader(app, relationObj.model, relationName,  header, true, roleList);
+						header = addPropToHeader(app, relationObj.model, relationName,  header, true, roleList, snaphyACL);
 					}else{
 						//Now add its properties to the header..
-						header = addPropToHeader(app, relationObj.model, relationName,  header, false, roleList);
+						header = addPropToHeader(app, relationObj.model, relationName,  header, false, roleList, snaphyACL);
 					}
 
 					if(relationObj.type === "hasOne"){
@@ -607,7 +714,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						//If some related mode of related model is requested too.. then in this case.. call this method..
 						var relatedModelObj = app.models[relationObj.model];
 						var relatedModelRelations = relatedModelObj.definition.settings.relations;
-						var relatedHeader = addPropToHeader(app, relationObj.model, '', [], false, roleList);
+						var relatedHeader = addPropToHeader(app, relationObj.model, '', [], false, roleList, snaphyACL);
 
 						belongsToSchema.templateOptions.relations = belongsToSchema.templateOptions.relations || {
 							hasMany:[],
@@ -617,7 +724,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 							hasOne:[]
 						};
 						//add schema
-						addNestedModelRelation(app, relatedHeader, belongsToSchema.templateOptions, relatedModelRelations, relationObj.model);
+						addNestedModelRelation(app, relatedHeader, belongsToSchema.templateOptions, relatedModelRelations, relationObj.model, snaphyACL);
 					}
 
 					const checkRelationEditAccess_ = checkRelationEditAccess(relationObj, roleList);
@@ -661,9 +768,10 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @param header
 	 * @param absoluteSchema
 	 * @param roleList
+	 * @param snaphyACL
      * @returns {*|Array}
      */
-	var addPropToHeader = function(app, modelName, prefix,  header, absoluteSchema, roleList){
+	var addPropToHeader = function(app, modelName, prefix,  header, absoluteSchema, roleList, snaphyACL){
 		header = header || [];
         if(!absoluteSchema){
             absoluteSchema = false;
@@ -678,8 +786,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				if(modelProperties[key].template !== undefined){
                     //Flag to track if to reject property or accept prop..
                     let rejectProperty = checkPropertyAccess(modelProperties[key].template, roleList, "header");
+                    let dynamicRejectProperty = checkDynamicPropertyAccess(key, prefix, roleList, snaphyACL, "header");
                     //Only allow if reject prop value is false..
-                    if(!rejectProperty){
+                    if(!rejectProperty && !dynamicRejectProperty){
                         var propIsHidden = false;
                         if(hiddenProperties){
                             //Now checkingif the value is a hidden prop.
@@ -701,9 +810,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                                 }else{
                                     header.push(prefix + '_' + key);
                                 }
-
                             }
-
                         }
                     }
 
@@ -714,15 +821,17 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	};
 
 
+
 	/**
 	 * Generate template structure for data entry schema.
 	 * @param app
 	 * @param modelName
 	 * @param schema
 	 * @param roleList {[string]} list of roles for current logged user. Loopback current context.
+	 * @param snaphyACL
      * @returns {*}
      */
-	var generateTemplateStr = function(app, modelName, schema, roleList){
+	var generateTemplateStr = function(app, modelName, schema, roleList, snaphyACL){
 		if(!schema){
 			schema = {};
 			schema.model = modelName;
@@ -768,10 +877,11 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				if(propObj !== undefined){
                     //Flag to track if to reject property or accept prop..
                     let rejectProperty = checkPropertyAccess(propObj, roleList, "fields");
+                    let dynamicRejectProperty = checkDynamicPropertyAccess(propertyName, '', roleList, snaphyACL, "fields");
 
 
                     //Add property only if rejectProperty value is false..
-                    if(!rejectProperty){
+                    if(!rejectProperty && !dynamicRejectProperty){
                         propObj.key = propertyName;
                         //also add the validation to the object..
                         try{
