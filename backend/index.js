@@ -4,6 +4,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	var onDelete = require('./cascadingDelete');
 	var _ = require("lodash");
 	var modifyHasAndBelongsToMany = require("./modifyHasAndBelongsToMany");
+	const Promise = require("bluebird");
 	/**
 	 * Here server is the main app object
 	 * databaseObj is the mapped database from the package.json file
@@ -32,8 +33,48 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 			onDelete.onCascadeDelete(server, Model.modelName);
 			modifyHasAndBelongsToMany.modifyRelation(server, Model.modelName);
 		});
-
 	};
+
+
+    /**
+	 * Fetch the snaphy acl from the list.
+     * @param modelName {String}
+     * @param roles {Array}
+     */
+	const getSnaphyACL = function (modelName, roles) {
+			return new Promise(function (resolve, reject) {
+                if(modelName && roles){
+                	if(roles.length){
+                        const SnaphyACL = databaseObj.SnaphyACL;
+                        SnaphyACL.findOne({
+                            where:{
+                                model: modelName,
+                                role: {
+                                    inq: roles
+                                },
+								include:["snaphyACLProps", "snaphyACLRelations"]
+							}
+                        })
+                            .then(function (snaphyACL) {
+                                resolve(snaphyACL);
+                            })
+                            .catch(function (error) {
+                                reject(error);
+                            });
+					}else{
+                		reject("GetAbsoluteSchema: Roles array cannot be empty.");
+					}
+
+				}else{
+                	reject("Model name and roles required");
+				}
+
+
+            });
+    };
+
+
+
 
 
 	/**
@@ -111,50 +152,16 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						console.error("Error occured in fetching roles.", err);
                         callback(err);
 					}else{
-                        const tableObj = helper.getTableJson(modelName);
-                        if(tableObj){
-                            if(tableObj.tables){
-                                tables = tableObj.tables;
-                            }
-                            if(tableObj.widgets){
-                                widgets = tableObj.widgets;
-                            }
-                            if(tableObj.filters){
-                                filters = tableObj.filters;
-                            }
-                            if(tableObj.settings){
-                                settings = tableObj.settings;
-                            }
-                        }
-
-
-
-                        /**
-                         * Now form the desired schema and return it.
-                         */
-                        var header = addPropToHeader(app, modelName, '', [], false, roleList),
-                        //Get template structure..
-                        schema = generateTemplateStr(app, modelName, null, roleList);
-
-
-                        //Now recursively add relations to the models...
-                        addNestedModelRelation(app, header, schema, relations, modelName, true, roleList);
-
-                        //Now add filters and tables and headers to the model..
-                        schema.header  = header;
-                        schema.filters = filters;
-                        schema.tables  = tables;
-                        schema.widgets  = widgets;
-                        schema.settings  = settings;
-
-                        if(schema.fields){
-                            //Sort the fields..
-                            schema.fields = sortByPriority(schema.fields);
-                        }
-
-
-
-                        callback(null, schema);
+                        getSnaphyACL(modelName, roleList)
+							.then(function (snaphyACL) {
+                                return generateSchemaByACL(app, modelName, relations, filters, tables, settings, widgets, roleList, snaphyACL);
+                            })
+							.then(function (schema) {
+                                callback(null, schema);
+                            })
+							.catch(function (error) {
+								callback(error);
+                            });
 					}
 				});
 			}else{
@@ -181,6 +188,99 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				}
 		);
 	};
+
+    /**
+	 * Generate Schema according ACL and defined roles.
+     * @param app
+     * @param modelName
+     * @param relations
+     * @param filters
+     * @param tables
+     * @param settings
+     * @param widgets
+     * @param roleList
+     * @param snaphyACL
+     */
+	const generateSchemaByACL = function (app, modelName, relations, filters, tables, settings, widgets, roleList, snaphyACL) {
+        return new Promise(function (resolve, reject) {
+            const tableObj = helper.getTableJson(modelName);
+            if(tableObj){
+                if(tableObj.tables){
+                    tables = tableObj.tables;
+                }
+                if(tableObj.widgets){
+                    widgets = tableObj.widgets;
+                }
+                if(tableObj.filters){
+                    filters = tableObj.filters;
+                }
+                if(tableObj.settings){
+                    settings = tableObj.settings;
+                    if(snaphyACL){
+                    	//Check for read permission..
+						if(snaphyACL.read === "deny"){
+                            settings.read = false;
+						}else if(snaphyACL.read === "allow"){
+							//handle setting for read === true..
+                            settings.read = true;
+						}
+
+                        //Check for read permission..
+                        if(snaphyACL.create === "deny"){
+                            settings.create = false;
+                        }else if(snaphyACL.create === "allow"){
+                            //handle setting for read === true..
+                            settings.create = true;
+                        }
+
+                        //Check for read permission..
+                        if(snaphyACL.edit === "deny"){
+                            settings.edit = false;
+                        }else if(snaphyACL.edit === "allow"){
+                            //handle setting for read === true..
+                            settings.edit = true;
+                        }
+
+                        //Check for read permission..
+                        if(snaphyACL.delete === "deny"){
+                            settings.delete = false;
+                        }else if(snaphyACL.delete === "allow"){
+                            //handle setting for read === true..
+                            settings.delete = true;
+                        }
+					}
+                }
+            }
+
+
+
+            /**
+             * Now form the desired schema and return it.
+             */
+            var header = addPropToHeader(app, modelName, '', [], false, roleList),
+                //Get template structure..
+                schema = generateTemplateStr(app, modelName, null, roleList);
+
+
+            //Now recursively add relations to the models...
+            addNestedModelRelation(app, header, schema, relations, modelName, true, roleList);
+
+            //Now add filters and tables and headers to the model..
+            schema.header  = header;
+            schema.filters = filters;
+            schema.tables  = tables;
+            schema.widgets  = widgets;
+            schema.settings  = settings;
+
+            if(schema.fields){
+                //Sort the fields..
+                schema.fields = sortByPriority(schema.fields);
+            }
+
+            resolve(schema);
+        });
+
+    };
 
 
 	var addCaseSensitiveSearch = function(server, modelName){

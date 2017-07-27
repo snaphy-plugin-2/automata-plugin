@@ -883,11 +883,22 @@ Example
             "disabled": Boolean, //which means to disabled the select element by default.
             "url": "/getAllDepartment",
             "method":"get|post"
-            "data":{
+            "options":{
                 //Only required if post in case of json data
             },
-            broadcast:"OnDepartmentFetched" //event to be broadcast when data has been fetched. successfully from remote url.
-                                            //with value {schema, data} schema will contain the schema object and data will contain the data object.
+            "field":{
+                "value": "id", //Value property.
+                "display":"name" //Display property.
+            },
+            broadcast:"OnDepartmentFetched"
+            //event to be broadcast when data has been fetched. successfully from remote url.
+            //with value {schema, data} schema will contain the schema object and data will contain the data object.
+            //schema: Schema Object ,
+            //options: Options list which contains all the data.,
+            //filter: filter options,
+            //data: data containing values on select,
+            //loadTableWithFilter: Load tables on filter select,
+            //setFilter: Set filter data.
          }
    }
  ```
@@ -900,6 +911,7 @@ Example
 2. Table
 3. Widgets
 4. Filter
+5. Settings
  
 
 
