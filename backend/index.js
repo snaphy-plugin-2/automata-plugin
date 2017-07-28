@@ -46,40 +46,44 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                 if(modelName && roles){
                 	if(roles.length){
                         const SnaphyACL = databaseObj.SnaphyACL;
-                        SnaphyACL.findOne({
-                            where:{
-                                model: modelName,
-                                role: {
-                                    inq: roles
-                                }
-							},
-                            include:["snaphyACLProps", "snaphyACLRelations"]
-                        })
-                            .then(function (snaphyACL) {
-                            	if(snaphyACL){
-                                    const aclObj = snaphyACL.toJSON();
-                                    if(snaphyACL.snaphyACLProps()){
-                                        aclObj.snaphyACLProps = {};
-										snaphyACL.snaphyACLProps().forEach(function (aclProp) {
-                                            aclObj.snaphyACLProps[aclProp.name] = aclProp;
-                                        });
-									}
-
-                                    if(snaphyACL.snaphyACLRelations()){
-                                        aclObj.snaphyACLRelations = {};
-                                        snaphyACL.snaphyACLRelations().forEach(function (aclrelation) {
-                                            aclObj.snaphyACLRelations[aclrelation.relation] = aclrelation;
-                                        });
+                        if(SnaphyACL){
+                            SnaphyACL.findOne({
+                                where:{
+                                    model: modelName,
+                                    role: {
+                                        inq: roles
                                     }
-                                    resolve(aclObj);
-								}else{
-                                    resolve(snaphyACL);
-								}
-
+                                },
+                                include:["snaphyACLProps", "snaphyACLRelations"]
                             })
-                            .catch(function (error) {
-                                reject(error);
-                            });
+                                .then(function (snaphyACL) {
+                                    if(snaphyACL){
+                                        const aclObj = snaphyACL.toJSON();
+                                        if(snaphyACL.snaphyACLProps()){
+                                            aclObj.snaphyACLProps = {};
+                                            snaphyACL.snaphyACLProps().forEach(function (aclProp) {
+                                                aclObj.snaphyACLProps[aclProp.name] = aclProp;
+                                            });
+                                        }
+
+                                        if(snaphyACL.snaphyACLRelations()){
+                                            aclObj.snaphyACLRelations = {};
+                                            snaphyACL.snaphyACLRelations().forEach(function (aclrelation) {
+                                                aclObj.snaphyACLRelations[aclrelation.relation] = aclrelation;
+                                            });
+                                        }
+                                        resolve(aclObj);
+                                    }else{
+                                        resolve(snaphyACL);
+                                    }
+
+                                })
+                                .catch(function (error) {
+                                    reject(error);
+                                });
+                        }else{
+                            resolve({});
+                        }
 					}else{
                 		reject("GetAbsoluteSchema: Roles array cannot be empty.");
 					}
