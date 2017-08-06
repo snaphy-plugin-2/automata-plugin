@@ -19,20 +19,26 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @return {[type]} [description]
 	 */
 	var init = function(){
-		//For loading the raw properties..
-		//Just Introduce a remote method in all the given method..
-		//run each models in the loop and add a remote method to it.
-		var models = server.models();
+		if(!server.automata){
+            server.automata = true;
+            //For loading the raw properties..
+            //Just Introduce a remote method in all the given method..
+            //run each models in the loop and add a remote method to it.
+            var models = server.models();
 
-		models.forEach(function(Model) {
-			//refer to https://apidocs.strongloop.com/loopback/#app-models
-			addRemoteMethod(server, Model.modelName);
-			//Also add save method to each models..
-			saveRemoteMethod.addSaveMethod(server, Model.modelName);
-			addCaseSensitiveSearch (server, Model.modelName);
-			onDelete.onCascadeDelete(server, Model.modelName);
-			modifyHasAndBelongsToMany.modifyRelation(server, Model.modelName);
-		});
+            models.forEach(function(Model) {
+                //refer to https://apidocs.strongloop.com/loopback/#app-models
+                addRemoteMethod(server, Model.modelName);
+                //Also add save method to each models..
+                saveRemoteMethod.addSaveMethod(server, Model.modelName);
+                addCaseSensitiveSearch (server, Model.modelName);
+                onDelete.onCascadeDelete(server, Model.modelName);
+                modifyHasAndBelongsToMany.modifyRelation(server, Model.modelName);
+            });
+		}else{
+			console.log("Rejected Automata");
+		}
+
 	};
 
 
@@ -54,21 +60,21 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                                         inq: roles
                                     }
                                 },
-                                include:["snaphyACLProps", "snaphyACLRelations"]
+                                include:["snaphyAclProps", "snaphyAclRelations"]
                             })
                                 .then(function (snaphyACL) {
                                     if(snaphyACL){
                                         const aclObj = snaphyACL.toJSON();
-                                        if(snaphyACL.snaphyACLProps()){
+                                        if(snaphyACL.snaphyAclProps()){
                                             aclObj.snaphyACLProps = {};
-                                            snaphyACL.snaphyACLProps().forEach(function (aclProp) {
+                                            snaphyACL.snaphyAclProps().forEach(function (aclProp) {
                                                 aclObj.snaphyACLProps[aclProp.name] = aclProp;
                                             });
                                         }
 
-                                        if(snaphyACL.snaphyACLRelations()){
+                                        if(snaphyACL.snaphyAclRelations()){
                                             aclObj.snaphyACLRelations = {};
-                                            snaphyACL.snaphyACLRelations().forEach(function (aclrelation) {
+                                            snaphyACL.snaphyAclRelations().forEach(function (aclrelation) {
                                                 aclObj.snaphyACLRelations[aclrelation.relation] = aclrelation;
                                             });
                                         }
