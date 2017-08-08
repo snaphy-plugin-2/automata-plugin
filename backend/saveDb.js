@@ -207,9 +207,9 @@ var addForeignKeyToData = function(relationType, modelRelationSchema, relationNa
                 if(relationData.id){
                     //if dataObj don't have relation foreign key and value assigned then assigned.
                     //Refer to problems faced in OrthoPG case..
-                    if(!dataObj[foreignKey]){
-                        dataObj[foreignKey] = ObjectID(relationData.id);
-                    }
+                    //if(dataObj[foreignKey]){
+                    dataObj[foreignKey] = ObjectID(relationData.id);
+                    //}
                 }
             }else{
                 removeParams[foreignKey] = true;
