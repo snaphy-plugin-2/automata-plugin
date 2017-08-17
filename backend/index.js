@@ -714,6 +714,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						key            : relationName,
 						templateOptions: relationObj.templateOptions
 					};
+
+					if(relationObj.templateOptions.type){
+						belongsToSchema.type = relationObj.templateOptions.type;
+					}
+
+
 					belongsToSchema.templateOptions.model      = relationObj.model;
 					belongsToSchema.templateOptions.foreignKey = relationObj.foreignKey === "" ? relationName + 'Id' : relationObj.foreignKey;
 					//Now add nested schema to the relational model.
