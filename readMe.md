@@ -780,6 +780,7 @@ Example
         "loadWhen": "departmentLoadedEmployee",
         "onLoad":"departmentEmployeeLoaded",
         "onSelect":"departmentSelected",
+        "readOnly": false,
         "acl": {
           "allow": [],
           "reject": ["DepartmentEmployee", "DepartmentAdmin"],
