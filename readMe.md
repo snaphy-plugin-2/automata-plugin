@@ -761,6 +761,36 @@ Example
               "type": private
           }
           ```
+
+
+####smartSelect
+> Use Case: Run time data fetch. Used in Placce of belongsTo
+
+
+```
+ "department": {
+      "type": "belongsTo",
+      "model": "Department",
+      "foreignKey": "",
+      "templateOptions": {
+        "btnText": "Assign department",
+        "searchProp": "name",
+        "type": "smartSelect",
+        "id": "departmentName",
+        "loadWhen": "departmentLoadedEmployee",
+        "onLoad":"departmentEmployeeLoaded",
+        "onSelect":"departmentSelected",
+        "acl": {
+          "allow": [],
+          "reject": ["DepartmentEmployee", "DepartmentAdmin"],
+          "relations":{
+            "allow":[],
+            "reject": ["DepartmentEmployee", "DepartmentAdmin"]
+          }
+        }
+      }
+    }
+```
       
      
 ####repeatSection  
