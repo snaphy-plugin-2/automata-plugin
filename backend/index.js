@@ -756,9 +756,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             schema.container.default.schema.push(belongsToSchema);
                             //schema.fields.push(belongsToSchema);
                         }
-
-                        //Now add this to the schema..
-                        //schema.fields.push(belongsToSchema);
 					}
 				}
 
@@ -985,8 +982,6 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             schema.container.default = schema.container.default || initializeContainer();
                             schema.container.default.schema.push(propObj);
                         }
-
-                        //schema.fields.push(propObj);
                     }
 				}
 			}
