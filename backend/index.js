@@ -770,6 +770,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
      * @param schema
      * @param tableObj
      */
+
     const addContainerSettings = function (schema, tableObj) {
         if(tableObj.box){
             for(const boxName in tableObj.box){
@@ -788,6 +789,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
         }
         return schema;
     };
+
 
 
 
