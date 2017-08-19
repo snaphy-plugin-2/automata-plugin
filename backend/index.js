@@ -218,6 +218,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 		);
 	};
 
+
     /**
 	 * Generate Schema according ACL and defined roles.
      * @param app
@@ -746,8 +747,18 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 					const checkRelationEditAccess_ = checkRelationEditAccess(relationObj, roleList);
 					//Only allow if reject value is set to be false..
 					if(!checkRelationEditAccess_){
+                        if(relations[relationName].templateOptions.container){
+                            schema.container[relations[relationName].templateOptions.container] = schema.container[relations[relationName].templateOptions.container] || initializeContainer();
+                            schema.container[relations[relationName].templateOptions.container].schema.push(belongsToSchema);
+                        }else{
+                            //Now add this to the schema..
+                            schema.container.default = schema.container.default || initializeContainer();
+                            schema.container.default.schema.push(belongsToSchema);
+                            //schema.fields.push(belongsToSchema);
+                        }
+
                         //Now add this to the schema..
-                        schema.fields.push(belongsToSchema);
+                        //schema.fields.push(belongsToSchema);
 					}
 				}
 
@@ -756,27 +767,35 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	};
 
 
-	/**
-	 * Checks if the model has any relations property..
-	 * @param app
-	 * @param modelName
-	 * @returns {boolean}
-	 * //TODO THIS METHOD IS NOT NEEDED AND SHOULD BE REMOVED
+
+    /**
+     * Add container definition like class or style..
+     * @param schema
+     * @param tableObj
      */
-	var checkModelRelation = function(app, modelName){
-		var modelObj = app.models[modelName];
-		var relationFound = false;
-		for(var relationName in modelObj.definition.settings.relations){
-			if(modelObj.definition.settings.relations.hasOwnProperty(relationName)){
-				relationFound = true;
-				break;
-			}
-		}
-		return relationFound;
-	};
+    const addContainerSettings = function (schema, tableObj) {
+        if(tableObj.container){
+            for(const containerName in tableObj.container){
+                if(tableObj.container.hasOwnProperty(containerName)){
+                    //initializeContainer();
+                    schema.container[containerName] = schema.container[containerName] || initializeContainer();
+                    let settings = tableObj.container[containerName];
+                    //Assign properties value to schema..
+                    for(const prop in settings){
+                        if(settings.hasOwnProperty(prop)){
+                            schema.container[containerName][prop] = settings[prop];
+                        }
+                    }
+                }
+            }
+        }
+        return schema;
+    };
 
 
-	/**
+
+
+    /**
 	 * Generate header by adding properties key names.
 	 * @param app
 	 * @param modelName
@@ -837,6 +856,23 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	};
 
 
+    /**
+     *  Intiailize the container object for a container type
+     * @returns {{class: Array, style: {}, schema: Array, options: {}}}
+     */
+    const initializeContainer = function () {
+        return {
+            //Class in form or array..
+            class: [],
+            style:{},
+            //Store schema for the given container
+            schema:[],
+            //For storing additional options..
+            options:{}
+        };
+    };
+
+
 
 	/**
 	 * Generate template structure for data entry schema.
@@ -859,9 +895,29 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 				hasOne:[]
 			};
 		}
-		schema.fields   = [];
+
+        //Start adding container..
+        schema.container = {};
+        //Store different fields by their name,,
+        schema.container.default   = schema.container.default || initializeContainer();
+
+		//schema.fields   = [];
 		const validationModelObj = helper.getValidationObj(modelName);
 		//{validationsBackend, complexValidation}
+
+        //path of table data from //common/table/model.json data
+        const tableModelObj = helper.getTablePath(modelName);
+        //Actual table object data..
+        let tableModelData = {};
+        //{validationsBackend, complexValidation}
+        if(tableModelObj){
+            if(tableModelObj.json){
+                tableModelData = helper.readPackageJsonFile(tableModelObj.json);
+            }
+        }
+
+        //Add container settings stored in table definitions..file..
+        addContainerSettings(schema, tableModelData);
 
 		let
 			validationObj,
@@ -917,7 +973,20 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             // Validation is not defined in the model definition
                         }
 
-                        schema.fields.push(propObj);
+                        if (propObj.templateOptions) {
+                            if (propObj.templateOptions.container) {
+                                schema.container[propObj.templateOptions.container] = schema.container[propObj.templateOptions.container] || initializeContainer();
+                                schema.container[propObj.templateOptions.container].schema.push(propObj);
+                            } else {
+                                schema.container.default = schema.container.default || initializeContainer();
+                                schema.container.default.schema.push(propObj);
+                            }
+                        } else {
+                            schema.container.default = schema.container.default || initializeContainer();
+                            schema.container.default.schema.push(propObj);
+                        }
+
+                        //schema.fields.push(propObj);
                     }
 				}
 			}
@@ -982,6 +1051,12 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 
 	//return all the methods that you wish to provide user to extend this plugin.
 	return {
-		init: init
+		init: init,
+        getSnaphyACL: getSnaphyACL,
+        initializeContainer: initializeContainer,
+        addContainerSettings: addContainerSettings,
+        checkPropertyAccess: checkPropertyAccess,
+        checkDynamicPropertyAccess: checkDynamicPropertyAccess,
+        checkRelationEditAccess: checkRelationEditAccess
 	};
 }; //module.exports
