@@ -746,8 +746,16 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 					const checkRelationEditAccess_ = checkRelationEditAccess(relationObj, roleList);
 					//Only allow if reject value is set to be false..
 					if(!checkRelationEditAccess_){
-                        //Now add this to the schema..
-                        schema.fields.push(belongsToSchema);
+
+                        if(relations[relationName].templateOptions.box){
+                            schema.container[relations[relationName].templateOptions.box] = schema.container[relations[relationName].templateOptions.box] || initializeContainer();
+                            schema.container[relations[relationName].templateOptions.box].schema.push(belongsToSchema);
+                        }else{
+                            //Now add this to the schema..
+                            schema.container.default = schema.container.default || initializeContainer();
+                            schema.container.default.schema.push(belongsToSchema);
+                            //schema.fields.push(belongsToSchema);
+                        }
 					}
 				}
 
@@ -763,17 +771,26 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 	 * @returns {boolean}
 	 * //TODO THIS METHOD IS NOT NEEDED AND SHOULD BE REMOVED
      */
-	var checkModelRelation = function(app, modelName){
-		var modelObj = app.models[modelName];
-		var relationFound = false;
-		for(var relationName in modelObj.definition.settings.relations){
-			if(modelObj.definition.settings.relations.hasOwnProperty(relationName)){
-				relationFound = true;
-				break;
-			}
-		}
-		return relationFound;
-	};
+
+    const addContainerSettings = function (schema, tableObj) {
+        if(tableObj.box){
+            for(const boxName in tableObj.box){
+                if(tableObj.box.hasOwnProperty(boxName)){
+                    //initializeContainer();
+                    schema.container[boxName] = schema.container[boxName] || initializeContainer();
+                    let settings = tableObj.box[boxName];
+                    //Assign properties value to schema..
+                    for(const prop in settings){
+                        if(settings.hasOwnProperty(prop)){
+                            schema.container[boxName][prop] = settings[prop];
+                        }
+                    }
+                }
+            }
+        }
+        return schema;
+    };
+
 
 
 	/**
@@ -917,7 +934,18 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                             // Validation is not defined in the model definition
                         }
 
-                        schema.fields.push(propObj);
+                        if (propObj.templateOptions) {
+                            if (propObj.templateOptions.box) {
+                                schema.container[propObj.templateOptions.box] = schema.container[propObj.templateOptions.box] || initializeContainer();
+                                schema.container[propObj.templateOptions.box].schema.push(propObj);
+                            } else {
+                                schema.container.default = schema.container.default || initializeContainer();
+                                schema.container.default.schema.push(propObj);
+                            }
+                        } else {
+                            schema.container.default = schema.container.default || initializeContainer();
+                            schema.container.default.schema.push(propObj);
+                        }
                     }
 				}
 			}
