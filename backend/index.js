@@ -747,9 +747,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 					const checkRelationEditAccess_ = checkRelationEditAccess(relationObj, roleList);
 					//Only allow if reject value is set to be false..
 					if(!checkRelationEditAccess_){
-                        if(relations[relationName].templateOptions.container){
-                            schema.container[relations[relationName].templateOptions.container] = schema.container[relations[relationName].templateOptions.container] || initializeContainer();
-                            schema.container[relations[relationName].templateOptions.container].schema.push(belongsToSchema);
+                        if(relations[relationName].templateOptions.box){
+                            schema.container[relations[relationName].templateOptions.box] = schema.container[relations[relationName].templateOptions.box] || initializeContainer();
+                            schema.container[relations[relationName].templateOptions.box].schema.push(belongsToSchema);
                         }else{
                             //Now add this to the schema..
                             schema.container.default = schema.container.default || initializeContainer();
@@ -774,16 +774,16 @@ module.exports = function( server, databaseObj, helper, packageObj) {
      * @param tableObj
      */
     const addContainerSettings = function (schema, tableObj) {
-        if(tableObj.container){
-            for(const containerName in tableObj.container){
-                if(tableObj.container.hasOwnProperty(containerName)){
+        if(tableObj.box){
+            for(const boxName in tableObj.box){
+                if(tableObj.box.hasOwnProperty(boxName)){
                     //initializeContainer();
-                    schema.container[containerName] = schema.container[containerName] || initializeContainer();
-                    let settings = tableObj.container[containerName];
+                    schema.container[boxName] = schema.container[boxName] || initializeContainer();
+                    let settings = tableObj.box[boxName];
                     //Assign properties value to schema..
                     for(const prop in settings){
                         if(settings.hasOwnProperty(prop)){
-                            schema.container[containerName][prop] = settings[prop];
+                            schema.container[boxName][prop] = settings[prop];
                         }
                     }
                 }
@@ -974,9 +974,9 @@ module.exports = function( server, databaseObj, helper, packageObj) {
                         }
 
                         if (propObj.templateOptions) {
-                            if (propObj.templateOptions.container) {
-                                schema.container[propObj.templateOptions.container] = schema.container[propObj.templateOptions.container] || initializeContainer();
-                                schema.container[propObj.templateOptions.container].schema.push(propObj);
+                            if (propObj.templateOptions.box) {
+                                schema.container[propObj.templateOptions.box] = schema.container[propObj.templateOptions.box] || initializeContainer();
+                                schema.container[propObj.templateOptions.box].schema.push(propObj);
                             } else {
                                 schema.container.default = schema.container.default || initializeContainer();
                                 schema.container.default.schema.push(propObj);
