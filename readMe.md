@@ -935,6 +935,79 @@ Example
  ```
 
 
+#### Container -> Arranging Elements in a Box and Styling it around.
+> `common/models/model-name.json`
+```
+    {
+        "name": {
+              "type": "string",
+              "required": true,
+              "template": {
+                "type": "input",
+                "templateOptions": {
+                  "type": "text",
+                  "label": "Enter department name",
+                  "priority": 10,
+                  "id": "departmentName",
+                  "box": "DepartmentNameBox"
+                }
+              }
+        },
+        "logo": {
+              "type": "object",
+              "required": true,
+              "template": {
+                "type": "singleFileUpload",
+                "templateOptions": {
+                  "box": "DepartmentLogoBox",
+                  "label": "Add department logo",
+                  "containerName": "easypoints",
+                  "id": "fileUploadId",
+                  "containerModel": "Container",
+                  "url": {
+                    "upload": "",
+                    "delete": ""
+                  },
+                  "bind": true,
+                  "fullWidth": false,
+                  "fileDataSource": "Image",
+                  "onImageUpdate": {
+                    "deletePrevious": true
+                  }
+                }
+              }
+            },
+    }
+```
+
+> `common/table/model-name.json`
+
+```
+{
+  "box":{
+    "DepartmentNameBox":{
+      "style":{
+        "border-color": "#eeeeee",
+        "border-width": "1px",
+        "border-style": "solid",
+        "padding-top": "20px",
+        "margin-bottom": "10px"
+      },
+      "class":["col-md-7", "clearfix"]
+    },
+    "DepartmentLogoBox":{
+      "style":{
+        "border-color": "#eeeeee",
+        "border-width": "1px",
+        "border-style": "solid",
+        "padding-top": "10px"
+      },
+      "class":["col-md-offset-1", "col-md-4"]
+    }
+  }
+}
+```
+
 
 
 #Future docs coming.
