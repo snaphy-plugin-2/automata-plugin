@@ -1011,7 +1011,7 @@ module.exports = function( server, databaseObj, helper, packageObj) {
 						}
 
 					}catch(err){
-                        console.error(err);
+                        //console.error(err);
 						// Do nothing
 						// Validation is not defined in the model definition
 					}
