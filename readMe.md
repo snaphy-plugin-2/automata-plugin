@@ -214,8 +214,14 @@ Textarea of type `<textarea id="firstName" ></textarea>`
   "template": {
     "type": "date",
     "templateOptions": {
-      "label": "Add event date.",
-      "placeholder": "Enter event date"
+    "label": "Select scheduled redeem date",
+    "placeholder": "Select scheduled redeem date",
+    "inline": true,
+    "priority": 10,
+    "utc": true,
+    "id": "schedule_redeemed_date",
+    "colSize": "col-xs-6",
+    "box": "dateBox"
     }
   }
 },
