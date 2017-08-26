@@ -207,6 +207,46 @@ module.exports = function(server, databaseObj, helper, packageObj) {
     });
   };
 
+    /**
+     * Get Table Filters
+     * @param filters
+     * @param roles
+     * @returns {{}}
+     */
+  const getTableFilters = function (filters, roles) {
+    const new_filter = {};
+    for(const key in filters){
+      if(filters.hasOwnProperty(key)){
+        const filterVal = filters[key];
+        if(filterVal.acl){
+            if (!roles) {
+                roles = [];
+            }
+
+            let rejectProperty = false;
+            if (filterVal) {
+                if (filterVal.acl) {
+                    if (filterVal.acl.reject) {
+                        rejectProperty = matchAccess(filterVal.acl, roles);
+                    }
+
+                }
+            }
+
+            if(!rejectProperty){
+                new_filter[key] = filterVal;
+            }
+
+        }else{
+          new_filter[key] = filterVal;
+        }
+      }
+    }
+    return new_filter;
+  };
+
+
+
   /**
    * Generate Schema according ACL and defined roles.
    * @param app
@@ -231,6 +271,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
         }
         if (tableObj.filters) {
           filters = tableObj.filters;
+          //filters = getTableFilters(filters, roleList);
         }
         tableObj.settings = tableObj.settings || {};
         if (tableObj.settings) {
