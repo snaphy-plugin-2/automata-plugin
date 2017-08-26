@@ -1015,6 +1015,113 @@ Example
 ```
 
 
+## Additional Features
+
+ 1. "onSchemaFetched"
+     - Can be set from  `/common/settings/robustAutomata/admin-panel-setting.js`
+     - Will call an $broadcast event every time a new Schema is fetched.
+     - Will also send Model `schema` Object along with the schema.
+ 2. "Settings" : Will add settings to data panel.
+     - Can be set from `/common/table/model-name.json`
+   ```
+    "settings": {
+        "create": false,
+        "delete": false,
+        "read": true,
+        "form": {
+          "beforeSave": [
+            {
+              "departmentId": "$user.departmentId",
+              "key": "value"
+            }
+          ]
+        },
+        "widgets": {
+
+        },
+        "filters": {
+          "showReset": false
+        },
+        "tables":{
+          "showReset": false,
+          "autoLoad": false,
+          "resetWhenBroadCast": "DepartmentFilterSet",
+          "beforeTableLoad":"onLoadTable",
+          "sort":{
+            "added": "DESC"
+          },
+          "beforeLoad":{
+            "departmentId": "$user.departmentId"
+          }
+        },
+        "onClose":{
+          "unsubscribe":["OnDepartmentFetched", "onSchemaFetched"]
+        }
+      },
+   ```
+ > Settings Explanation:
+   1. `create`: {Boolean|default: true} Will Remove/Show Create Button.
+   2. `read`: {Boolean|default: true} .
+   3. `delete`: {Boolean|default: true} Will Remove/Show Delete Button.
+
+###### SETTINGS > FORM
+   Will contain all the settings that can help in configuring the `FORM` i.e data save panel.
+   1. `beforeSave` {function|Object}
+       - Will contain either a function with argument of data and return type promise.
+       - Can also contain Object. Will values that will be placed to the data. Before load time.
+       - In case of Object
+           ```
+           {
+              "departmentId": "$user.departmentId",
+              "key": "value"
+           }
+           ```
+           1. It can contain dynamic variables like $user.propertyId, this will get replaced by logged user given property values.
+           2. `"key": "value"`  Will simple get attached to main form data getting saved. Without getting modified.
+       - In case of `function` type data can be added dynamically. By listening to any filter
+                  like `onSchemaFetched` etc.
+            ```
+            function(formData){ return $q(function(resolve, reject){
+                //Modify FormData..Object and later return it.
+                resolve(formData);
+            })}
+            ```
+##### Settings>filters
+   Configure the settings of Filters Object
+       - `showReset`: {Boolean} Show Filter reset button.
+
+##### Settings>tables
+         ```
+         "tables":{
+               "showReset": false,
+               "autoLoad": false,
+               "resetWhenBroadCast": "DepartmentFilterSet",
+               "beforeTableLoad":"onLoadTable",
+               "sort":{
+                 "added": "DESC"
+               },
+               "beforeLoad":{
+                 "departmentId": "$user.departmentId"
+               }
+         }
+         ```
+
+
+         1. `showReset` Will either enable or disable the reset buttons.
+         2. `autoLoad` {Boolean} Will stop the auto loading of table and will load
+                          only when `resetWhenBroadCast` event is called.
+         3. `resetWhenBroadCast`: If This event is Called will load the table.
+         4. `beforeTableLoad`: If present will $broadcast this event just before everytime tables load/reloads.
+             - Argument Passed along with this event
+             {
+                 schema: //Schema Object,
+                 where: //Where Query Object,
+                 tableState: //Table state
+             }
+
+         5. sort: Will sort the table given the DESc or ASC.
+         6. beforeLoad: Will add property or dynamic property before loading of table in where query.
+
 
 #Future docs coming.
 1. Validation
