@@ -874,6 +874,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
             absoluteSchema = false;
         }
         var modelObj = app.models[modelName],
+            
             modelProperties = modelObj.definition.rawProperties,
             hiddenProperties = modelObj.definition.settings.hidden;
         for (var key in modelProperties) {
