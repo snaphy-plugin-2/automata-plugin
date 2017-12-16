@@ -42,7 +42,7 @@ var addSaveMethod = function(app, modelName) {
      *              'belongsTo':['details']
      *               }
      *              }
-     * @return {[type]}        [return the object of data with id property attached with it.]
+     * @return {{}}        [return the object of data with id property attached with it.]
      */
     modelObj.save = function(data, schema, callback) {
         if (data === undefined || schema === undefined) {
@@ -74,13 +74,13 @@ var addSaveMethod = function(app, modelName) {
             //Now save/update the data..
             modelObj.create(data)
                 .then(function(instance) {
-                    removeData (instance, removeParams, function(err, dataInstance){
-                        if(err){
-                            callback(err);
-                        }else{
-                            saveDataRelations(app, dataInstance, relations, modelRelationSchema, modelName, include, schema.relation, callback);
-                        }
-                    });
+                    return removeData (instance, removeParams);
+                })
+                .then(function (dataInstance) {
+                    return saveDataRelations(app, dataInstance, relations, modelRelationSchema, modelName, include, schema.relation);
+                })
+                .then(function (data) {
+                    callback(null, data);
                 })
                 .catch(function(err) {
                     console.log("Error saving data");
@@ -90,14 +90,13 @@ var addSaveMethod = function(app, modelName) {
             //Now save/update the data..
             modelObj.upsert(data)
                 .then(function(instance) {
-                    removeData (instance, removeParams, function(err, dataInstance){
-                        if(err){
-                            callback(err);
-                        }else{
-                            saveDataRelations(app, dataInstance, relations, modelRelationSchema, modelName, include, schema.relation, callback);
-                        }
-                    });
-                    
+                    return removeData (instance, removeParams);
+                })
+                .then(function (dataInstance) {
+                    return saveDataRelations(app, dataInstance, relations, modelRelationSchema, modelName, include, schema.relation);
+                })
+                .then(function (data) {
+                    callback(null, data);
                 })
                 .catch(function(err) {
                     console.log("Error saving data");
@@ -134,26 +133,27 @@ var addSaveMethod = function(app, modelName) {
 
 
 
-var removeData = function(dataInstance, removeParams, callback){
-    for(var key in removeParams ){
-        if(removeParams.hasOwnProperty(key)){
-            //Now remove the data
-            if(dataInstance[key]){
-                delete dataInstance[key];
-                dataInstance.unsetAttribute(key);
-            }   
+var removeData = function(dataInstance, removeParams){
+    return new Promise(function (resolve, reject) {
+        for(var key in removeParams ){
+            if(removeParams.hasOwnProperty(key)){
+                //Now remove the data
+                if(dataInstance[key]){
+                    delete dataInstance[key];
+                    dataInstance.unsetAttribute(key);
+                }
+            }
         }
-    }
-    //reset removeParams now..
-    removeParams = {};
-    dataInstance.save({}, function(err, value){
-        if(err){
-            callback(err);
-        }else{
-            callback(null, value);
-        }
-    });    
-
+        //reset removeParams now..
+        removeParams = {};
+        dataInstance.save({}, function(err, value){
+            if(err){
+                reject(err);
+            }else{
+                resolve(value);
+            }
+        });
+    });
 };
 
 
@@ -241,56 +241,61 @@ var getForeignKey = function(modelRelationSchema, relationName){
 };
 
 
-
-
 /**
- * Method for saving Data Relations
- * @param  {object} dataInstance        Containts the Instance of save model data.
- * @param  {object} relations           Contains the relations object.
- * @param  {object} modelRelationSchema Containts the schema relation object.
- * @return {[type]}                     [description]
+ * Save or Update the data model accordingly..
+ * @param app
+ * @param dataInstance
+ * @param relations
+ * @param modelRelationSchema
+ * @param modelName
+ * @param include
+ * @param relationSchema
  */
-var saveDataRelations = function(app, dataInstance, relations, modelRelationSchema, modelName, include, relationSchema, callback) {
-    var promises = [];
-    for (var relationsType in relations) {
-
-        if (relations.hasOwnProperty(relationsType)) {
-            var relationData = relations[relationsType];
-            //Now check if the modelData is empty or not.
-            if (!_.isEmpty(relationData)) {
-
-                //Now save/update the current relation type.
-                saveOrUpdate(app, dataInstance, relationsType, relationData, modelRelationSchema, promises, modelName, relationSchema, callback);
-            }
-        } //if
-    } //for loop..
+var saveDataRelations = function(app, dataInstance, relations, modelRelationSchema, modelName, include, relationSchema) {
+    return new Promise(function (resolve, reject) {
+        const promiseList = [];
+        for (var relationsType in relations) {
+            if (relations.hasOwnProperty(relationsType)) {
+                var relationData = relations[relationsType];
+                //Now check if the modelData is empty or not.
+                if (!_.isEmpty(relationData)) {
+                    promiseList.push(saveOrUpdate(app, dataInstance, relationsType, relationData, modelRelationSchema, modelName, relationSchema));
+                }
+            } //if
+        } //for loop..
 
 
+        Promise.each(promiseList, function () {})
+            .then(function() {
+                var modelObj = app.models[modelName];
+                modelObj.findById(dataInstance.id, {
+                    include: include
+                }, function(err, value) {
+                    //Return callback.
+                    resolve(value);
+                });
+            })
+            .catch(function(err) {
+                reject(err);
+            });
 
-    /**
-     * Return promise after all the callback has finished.
-     */
-    //TODO PROMISE NOT CALLING AFTER THE RELATED DATA SAVED IS CALLING BEFORE RELATED DATA SAVED.
-    //TODO HasManyThrough data not fetched during promise. Must be fetched.
-    Promise.all(promises).then(function() {
-        var modelObj = app.models[modelName];
-        modelObj.findById(dataInstance.id, {
-            include: include
-        }, function(err, value) {
-            //Return callback.
-            callback(null, value);
-        });
-    }).catch(function(err) {
-        callback(err);
+
     });
-
 };
 
 
 
 
-
 /**
+ *
+ * @param app
+ * @param dataInstance
+ * @param relationsType
+ * @param relationDataObj
+ * @param modelRelationSchema
+ * @param modelName
+ * @param relationSchema
+ * @examples
  * Save belongsTo relations
  * Data format
  * {
@@ -302,163 +307,170 @@ var saveDataRelations = function(app, dataInstance, relations, modelRelationSche
  *          alternateNumber: '9953242337'
  *      }
  * }
- * @param  {[type]} dataInstance        [description]
- * @param  {[type]} relationsType        [description]
- * @param  {[type]} relationDataObj     [description]
- * @param  {[type]} modelRelationSchema [description]
- * @return {[type]}                     [description]
  */
-var saveOrUpdate = function(app, dataInstance, relationsType, relationDataObj, modelRelationSchema, promises, modelName, relationSchema, callback) {
-    //First store all the data
-    for (var relationName in relationDataObj) {
-        if (relationDataObj.hasOwnProperty(relationName)) {
-            var relationData = relationDataObj[relationName];
-            var relatedModelName = modelRelationSchema[relationName].model;
-            var modelObj = app.models[relatedModelName];
+var saveOrUpdate = function(app, dataInstance, relationsType, relationDataObj, modelRelationSchema, modelName, relationSchema) {
+    return new Promise(function (resolve, reject) {
+        const promises = [];
+        //First store all the data
+        for (var relationName in relationDataObj) {
+            if (relationDataObj.hasOwnProperty(relationName)) {
+                var relationData = relationDataObj[relationName];
+                var relatedModelName = modelRelationSchema[relationName].model;
+                var modelObj = app.models[relatedModelName];
 
-            //get the foriegnKey.
-            var foriegnKey = modelRelationSchema[relationName].foriegnKey;
-            if (!foriegnKey) {
-                foriegnKey = _.lowerFirst(relationName) + 'Id';
-            }
+                //get the foriegnKey.
+                var foriegnKey = modelRelationSchema[relationName].foriegnKey;
+                if (!foriegnKey) {
+                    foriegnKey = _.lowerFirst(relationName) + 'Id';
+                }
 
-            if (relationsType === 'belongsTo') {
-                //Upsert belongs to relations and attach the relation to the
-                promises.push(upsertBelongsTo(modelObj, relationData, dataInstance, relationName, foriegnKey, callback));
+                if (relationsType === 'belongsTo') {
+                    //Upsert belongs to relations and attach the relation to the
+                    promises.push(upsertBelongsTo(modelObj, relationData, dataInstance, relationName, foriegnKey));
+                } //if
+                else if (relationsType === 'hasOne') {
+                    //Upsert belongs to relations and attach the relation to the
+                    promises.push(upsertHasOne(app, modelObj, relationData, dataInstance, relationName, modelName));
+                } //if
+                else if (relationsType === 'hasMany') {
+                    //relatedModelClass, relationDataArr, dataInstance, relationName, foriegnKey, manyType, callback
+                    promises.push(upsertTypeMany(modelObj, relationData, dataInstance, relationName, foriegnKey, 'hasMany'));
+                } //else if
+                else if (relationsType === 'hasAndBelongsToMany') {
+                    promises.push(upsertTypeMany(modelObj, relationData, dataInstance, relationName, foriegnKey, 'hasAndBelongsToMany'));
+                } else if (relationsType === 'hasManyThrough') {
+                    promises.push(upsertManyThrough(app, modelObj, relationData, dataInstance, relationName, foriegnKey, relationSchema, callback));
+                } else {
+                    //Do nothing here
+                }
             } //if
-            else if (relationsType === 'hasOne') {
-                //Upsert belongs to relations and attach the relation to the
-                promises.push(upsertHasOne(app, modelObj, relationData, dataInstance, relationName, modelName, callback));
-            } //if
-            else if (relationsType === 'hasMany') {
-                //relatedModelClass, relationDataArr, dataInstance, relationName, foriegnKey, manyType, callback
-                promises.push(upsertTypeMany(modelObj, relationData, dataInstance, relationName, foriegnKey, 'hasMany', callback));
-            } //else if
-            else if (relationsType === 'hasAndBelongsToMany') {
-                promises.push(upsertTypeMany(modelObj, relationData, dataInstance, relationName, foriegnKey, 'hasAndBelongsToMany', callback));
-            } else if (relationsType === 'hasManyThrough') {
-                promises.push(upsertManyThrough(app, modelObj, relationData, dataInstance, relationName, foriegnKey, relationSchema, callback));
-            } else {
+        } //for in loop.
 
-            }
-        } //if
-    } //for in loop.
+        Promise.each(promises, function () {})
+            .then(function () {
+                resolve();
+            })
+            .catch(function (error) {
+                reject(error);
+            });
+    });
 };
 
 
 //Dont use hasOne assosiated with bug
 //ALERT https://github.com/strongloop/loopback-connector-mongodb/issues/52
-var upsertHasOne = function(app, modelObj, relationData, dataInstance, relationName, parentModel, callback) {
-    //Adding two way communication ..
-    //Now get the relataion name at parent model.
-    var childRelationsObj = modelObj.definition.settings.relations;
-    var parentObj = app.models[parentModel];
-    var parentRelationName;
-    for (var relationObj in childRelationsObj) {
-        if (childRelationsObj.hasOwnProperty(relationObj)) {
-            var modelName = childRelationsObj[relationObj].model;
-            if (modelName === parentModel && ( childRelationsObj[relationObj].type === "hasOne" || childRelationsObj[relationObj].type === "belongsTo") ) {
-                parentRelationName = _.camelCase(modelName);
+var upsertHasOne = function(app, modelObj, relationData, dataInstance, relationName, parentModel) {
+    return new Promise(function (resolve, reject) {
+        //Adding two way communication ..
+        //Now get the relataion name at parent model.
+        var childRelationsObj = modelObj.definition.settings.relations;
+        var parentObj = app.models[parentModel];
+        var parentRelationName;
+        for (var relationObj in childRelationsObj) {
+            if (childRelationsObj.hasOwnProperty(relationObj)) {
+                var modelName = childRelationsObj[relationObj].model;
+                if (modelName === parentModel && ( childRelationsObj[relationObj].type === "hasOne" || childRelationsObj[relationObj].type === "belongsTo") ) {
+                    parentRelationName = _.camelCase(modelName);
+                }
             }
         }
-    }
 
-    if (!_.isEmpty(relationData)) {
-        //first check if the parent model has already a relation data present..
-        
-        var parentId = parentRelationName + "Id";
-        var whereObj = {};
-        whereObj[parentId] = dataInstance.id;
-        
-        modelObj.findOne({
-            where: whereObj
-        })
-        .then(function(data){
-            if(!_.isEmpty(data)){
-                var mainModel = dataInstance[relationName].build(relationData);
-                mainModel = mainModel.toJSON();
-                delete mainModel.id;
-                
-                data.updateAttributes(mainModel)
+        if (!_.isEmpty(relationData)) {
+            //first check if the parent model has already a relation data present..
+
+            var parentId = parentRelationName + "Id";
+            var whereObj = {};
+            whereObj[parentId] = dataInstance.id;
+
+            modelObj.findOne({
+                where: whereObj
+            })
+                .then(function(data){
+                    if(!_.isEmpty(data)){
+                        let mainModel = dataInstance[relationName].build(relationData);
+                        mainModel = mainModel.toJSON();
+                        delete mainModel.id;
+                        return data.updateAttributes(mainModel);
+                    }else{
+                        let mainModel = dataInstance[relationName].build(relationData);
+                        return modelObj.upsert(mainModel);
+                    }
+                })
                 .then(function(result){
                     //Now add the result to the dataInstance
                     //Now add this relation to the parent as well..
                     if (result) {
-                        addParentData(parentRelationName, dataInstance, parentObj, result);
+                        return addParentData(parentRelationName, dataInstance, parentObj, result);
                     }
                 })
+                .then(function () {
+                    resolve();
+                })
                 .catch(function(err){
-                    console.log("Error updating hasOne data");
-                    console.error(err);
-                    callback(err);
+                    console.log("Error saving data in HasONE");
+                    reject(err);
                 });
-            }else{
-                var mainModel = dataInstance[relationName].build(relationData);
-                modelObj.upsert(mainModel)
-                    .then(function(result) {
-                         //Now add the result to the dataInstance
-                         //Now add this relation to the parent as well..
-                        if (result) {
-                            addParentData(parentRelationName, dataInstance, parentObj, result);
-                        }
-                    })
-
-                    .catch(function(err) {
-                        console.log("Error saving data");
-                        callback(err);
-                    });
-            }
-                
-        })
-        .catch(function(err){
-            console.log("Error saving data in HasONE");
-            callback(err);
-        });
-    }
+        }else{
+            resolve();
+        }
+    });
+};
 
 
-    var addParentData = function(parentRelationName, dataInstance, parentObj, result){
+var addParentData = function(parentRelationName, dataInstance, parentObj, result){
+    return new Promise(function (resolve, reject) {
         if(parentRelationName){
             var parentData = result[parentRelationName].build(dataInstance);
             //Now update the parent data..
             parentObj.upsert(parentData)
                 .then(function() {
                     console.log("Data Successfully saved in parent hasOne");
-
+                    resolve();
                 })
                 .catch(function(err) {
                     console.log("error occured in hasOne parent upsert");
                     console.error(err);
+                    reject(err);
                 });
+        }else{
+            resolve();
         }
-    };
+    });
 };
 
 
 
-
-var upsertBelongsTo = function(modelObj, relationData, dataInstance, relationName, foreignKey, callback) {
-    if (!_.isEmpty(relationData)) {
-        modelObj.upsert(relationData)
-            .then(function(data) {
-                //Now attach data to the parent dataInstance..
-                dataInstance[relationName](data);
-                dataInstance[foreignKey] = data.id;
-
-                dataInstance.save()
-                    .then(function(value) {
-                        console.log("Successfully saved belongsTo data.");
-                    })
-                    .catch(function(err) {
-                        console.log("Error saving belongsTo data relationship.");
-                        callback(err);
-                    });
-            })
-            .catch(function(err) {
-                console.log("Error updating belongsTo data relationship.");
-                console.log(err);
-            });
-    }
+/**
+ * Upsert belongs To..
+ * @param modelObj
+ * @param relationData
+ * @param dataInstance
+ * @param relationName
+ * @param foreignKey
+ */
+var upsertBelongsTo = function(modelObj, relationData, dataInstance, relationName, foreignKey) {
+    return new Promise(function (resolve, reject) {
+        if (!_.isEmpty(relationData)) {
+            modelObj.upsert(relationData)
+                .then(function(data) {
+                    //Now attach data to the parent dataInstance..
+                    dataInstance[relationName](data);
+                    dataInstance[foreignKey] = data.id;
+                    return dataInstance.save();
+                })
+                .then(function(value) {
+                    console.log("Successfully saved belongsTo data.");
+                    resolve();
+                })
+                .catch(function(err) {
+                    console.log("Error updating belongsTo data relationship.");
+                    console.log(err);
+                    reject(err);
+                });
+        }else{
+            resolve();
+        }
+    });
 };
 
 
@@ -634,45 +646,49 @@ var upsertHasManyThroughFinal = function(app, modelObj, relationDataObj, dataIns
 
 
 //Upsert for hasMany and hasAndBelongsToMany common preprocess steps..
-var upsertTypeMany = function(relatedModelClass, relationDataArr, dataInstance, relationName, foriegnKey, manyType, callback) {
-    try {
-        async.series([
-            function(callback) {
-                dataInstance[relationName]({}, function(err, oldDataArr) {
-                    var deletedDataId = [];
-                    if(oldDataArr.length === 0){
-                        return callback();
-                    }
+var upsertTypeMany = function(relatedModelClass, relationDataArr, dataInstance, relationName, foriegnKey, manyType) {
+    return new Promise(function (resolve, reject) {
+        //Related model id that has been removed..
+        var deletedIdList = [];
+        new Promise(function (resolve, reject) {
+            dataInstance[relationName]({}, function(err, oldDataArr) {
+                if(err){
+                    reject(err);
+                }else {
+                    resolve(oldDataArr);
+                }
+            });
+        })
+            .then(function (oldDataArr) {
+                const promiseList = [];
+                if(oldDataArr.length === 0){
+                    return;
+                }
 
-                    //Related model id that has been removed..
-                    var deletedIdList = [];
-
-                    oldDataArr.forEach(function(dataObj, index) {
-                        var idFound = false;
-                        //Now loop over relationDataArr
-                        for (var i = 0; i < relationDataArr.length; i++) {
-                            if (relationDataArr[i].id) {
-                                if (dataObj.id.toString().trim() === relationDataArr[i].id.toString().trim()) {
-                                    idFound = true;
-                                    break;
-                                }
+                oldDataArr.forEach(function(dataObj, index) {
+                    var idFound = false;
+                    //Now loop over relationDataArr
+                    for (var i = 0; i < relationDataArr.length; i++) {
+                        if (relationDataArr[i].id) {
+                            if (dataObj.id.toString().trim() === relationDataArr[i].id.toString().trim()) {
+                                idFound = true;
+                                break;
                             }
                         }
-                        if (!idFound) {
-                            deletedIdList.push(dataObj.id);
-                            //TODO DELETE FROM HASANDBELONG TO MANY ..
-                            destroyHasManyRel(
-                                dataInstance,
-                                relationName,
-                                dataObj,
-                                manyType,
-                                relationDataArr,
-                                relatedModelClass,
-                                callback);
-                        }
+                    }
 
-                    });
-
+                    if (!idFound) {
+                        deletedIdList.push(dataObj.id);
+                        promiseList.push(
+                            destroyHasManyRel(dataInstance, relationName, dataObj, manyType)
+                        );
+                    }
+                });
+                //Call the call back..to delete all the old dangling referecne data..
+                return Promise.all(promiseList);
+            })
+            .then(function () {
+                return new Promise(function (resolve, reject) {
                     //Now destroy hasAndBelongsToMany data type..
                     if (manyType !== "hasMany") {
                         //Changed now call new disconnect method...
@@ -681,141 +697,144 @@ var upsertTypeMany = function(relatedModelClass, relationDataArr, dataInstance, 
                             disconnect(dataInstance.id, deletedIdList, function(err, value){
                                 if(err){
                                     console.log(err);
+                                    reject(err);
                                 }else{
                                     //Now save the instance of data in the dataInstance
                                     console.log("Link successfully removed to hasAndBelongsToMany relationship.");
+                                    resolve();
                                 }
                             });
+                        }else{
+                            resolve();
                         }
+                    }else{
+                        resolve();
                     }
-
-                    //Call the call back..
-                    return callback();
                 });
-            },
-            function(callback) {
+            })
+            .then(function () {
+                const promiseList = [];
+                //Handle hasMany
                 relationDataArr.forEach(function(relationData) {
-
                     if (manyType === 'hasMany') {
-                        //relationData[foriegnKey] = dataInstance.id;
-                        upsertHasManyFinal(relatedModelClass, relationData, dataInstance, relationName, callback);
+                        promiseList.push(upsertHasManyFinal(relatedModelClass, relationData, dataInstance, relationName));
                     }
-
                 });
 
+                return Promise.all(promiseList);
+            })
+            .then(function () {
+                //handle hasandbelongstomany...
                 //Changed add all the list instead for hasAndBelongToMany ...
                 if (manyType === 'hasAndBelongsToMany') {
-                    upserthasAndBelongsToManyFinal(dataInstance, relationName, relationDataArr, relatedModelClass, callback);
+                    return upserthasAndBelongsToManyFinal(dataInstance, relationName, relationDataArr, relatedModelClass);
                 }
+            })
+            .then(function () {
+                resolve();
+            })
+            .catch(function (error) {
+                reject(error);
+            });
+    });
 
-                return callback();
-            }
-        ], function(err, results){
-            if(err){
-                return callback(err);
-            }
-        });
-
-
-
-
-    } catch (err) {
-        console.error("Got error", err);
-        callback(err);
-    }
 
 };
 
 
 //For destroying hasMany relation link ..
-var destroyHasManyRel = function(
-    dataInstance,
-    relationName,
-    dataObj,
-    manyType,
-    relationDataArr,
-    relatedModelClass,
-    callback) {
-    async.series([
-        function(callback) {
-            if (manyType === "hasMany") {
-                //destroy that data..
-                dataInstance[relationName].destroy(dataObj.id)
-                    .then(function() {
-                        console.log('unused hasMany link data destroyed');
-                        callback();
-                    })
-                    .catch(function(err) {
-                        callback(err);
-                    });
-            }
-        }
-    ]);
-};
-
-
-
-var upsertHasManyFinal = function(relatedModelClass, relationData, dataInstance, relationName, callback) {
-    //Now update the data and add the data to the main data instance..
-    var data = dataInstance[relationName].build(relationData);
-    relatedModelClass.upsert(data)
-        .then(function(data_) {
-            console.log("Has many data added to server.");
-        })
-        .catch(function(err) {
-            callback(err);
-        });
-};
-
-
-
-var upserthasAndBelongsToManyFinal = function(dataInstance, relationName, relationDataArr, relatedModelClass, callback) {
-
-    var series = [];
-    var relatedDataId = [];
-    relationDataArr.forEach(function(relationData, index){
-        var data = relationDataArr[index];
-        series.push(function(callback){
-            dataUpsert(relatedModelClass, data, relatedDataId, callback);
-        });
-    });
-
-    //Now save the data in series..
-    async.series(series, function(err){
-        if(err){
-            callback(err);
+var destroyHasManyRel = function(dataInstance, relationName, dataObj, manyType) {
+    return new Promise(function (resolve, reject) {
+        if (manyType === "hasMany") {
+            //destroy that data..
+            dataInstance[relationName].destroy(dataObj.id)
+                .then(function() {
+                    console.log('unused hasMany link data destroyed');
+                    resolve();
+                })
+                .catch(function(err) {
+                    reject(err);
+                });
         }else{
-            //Now send the callback
-            var connect = dataInstance["__connect__" + relationName];
-            connect(dataInstance.id, relatedDataId, function(err, values){
-                if(err){
-                    console.error(err);
-                }else{
-                    //Now save the instance of data in the dataInstance
-                    console.log("Link successfully added to hasAndBelongsToMany relationship.");
-                }
-            });
+            resolve();
         }
     });
 };
 
 
 
-var dataUpsert = function(relatedModelClass, relationData, relatedDataId, callback){
-    relatedModelClass.upsert(relationData)
-        .then(function(data){
-            data = data || relationData;
-            if(data){
-                relatedDataId.push(data.id);
-            }
-            //return async callback..
-            callback();
-        })
-        .catch(function(err){
-            console.error("\n\n\nGot error", err);
-            return callback(err);
+var upsertHasManyFinal = function(relatedModelClass, relationData, dataInstance, relationName) {
+    return new Promise(function (resolve, reject) {
+        //Now update the data and add the data to the main data instance..
+        var data = dataInstance[relationName].build(relationData);
+        relatedModelClass.upsert(data)
+            .then(function(data_) {
+                console.log("Has many data added to server.");
+                resolve();
+            })
+            .catch(function(err) {
+                reject(err);
+            });
+    })
+
+};
+
+
+
+var upserthasAndBelongsToManyFinal = function(dataInstance, relationName, relationDataArr, relatedModelClass) {
+    return new Promise(function (resolve, reject) {
+        const promise = [];
+        const relatedDataIds = [];
+        relationDataArr.forEach(function(relationData, index){
+            var data = relationDataArr[index];
+            promise.push(dataUpsert(relatedModelClass, data, relatedDataIds));
         });
-    //});
+
+        //Now save the data in series..
+        Promise.all(promise)
+            .then(function () {
+                //Now send the callback
+                var connect = dataInstance["__connect__" + relationName];
+                return new Promise(function (resolve, reject) {
+                    connect(dataInstance.id, relatedDataIds, function(err, values){
+                        if(err){
+                            reject(err);
+                        }else{
+                            //Now save the instance of data in the dataInstance
+                            console.log("Link successfully added to hasAndBelongsToMany relationship.");
+                            resolve();
+                        }
+                    });
+                });
+            })
+            .then(function () {
+                resolve();
+            })
+            .catch(function (error) {
+                reject(error);
+            });
+    });
+};
+
+
+
+var dataUpsert = function(relatedModelClass, relationData, relatedDataId){
+    return new Promise(function (resolve, reject) {
+        relatedModelClass.upsert(relationData)
+            .then(function(data){
+                data = data || relationData;
+                if(data){
+                    relatedDataId.push(data.id);
+                }
+                //return async callback..
+                resolve();
+            })
+            .catch(function(err){
+                console.error("\n\n\nGot error", err);
+                return reject(err);
+            });
+        //});
+    });
 };
 
 
