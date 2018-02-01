@@ -483,6 +483,22 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
   ...
   ...
 }
+
+#For displaying image on table
+//common/table/modelName.json
+{
+  "table":{
+    "postImages":{
+      "image": true,
+      "style":{
+        "width": "50px !important",
+        "max-width": "50px !important",
+        "min-width": "50px"
+      }
+    }
+  }
+}
+
 ```
 **Options**  
 
