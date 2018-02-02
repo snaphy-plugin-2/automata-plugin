@@ -532,6 +532,51 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
         }
       }
   ```
+
+
+
+####MultiSmartSelect
+
+> For Using a Property Array of Object. By Selecting From Properties from Another Model.
+//models/news.json
+{
+"newsLabels":{
+    "type": ["object"],
+    "template":{
+      "type": "multiSmartSelect",
+      "templateOptions":{
+        "placeholder": "Select Labels",
+        "modelName": "Label",
+        "searchProp": "name",
+        "id": "multiLabelSelect",
+        "label": "Select Label"
+      }
+    }
+  }
+}
+
+
+For a model news we have a property which will store the `labels` of which `news` belongs to. `Label` can be `more than one` and is another Model `Label`;
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `label` Label showing add images.
+  - `placeholder` label
+  - `searchProp` Properties from model `Label` which it will use to search.
+  - `modelName` Model name from which it will search the values.
+  - `id` Used for applying validation to image upload.  
+
+//For Table Search 
+```
+"newsLabels":{
+  "display": true,
+  "search": "arrayOfObject",
+  "type": "text",
+  "propertyName": "name"
+}
+```
+
   
   
   
