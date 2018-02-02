@@ -549,7 +549,8 @@ Same as [Select](#select) with difference of asking `options` value as `Array` t
         "modelName": "Label",
         "searchProp": "name",
         "id": "multiLabelSelect",
-        "label": "Select Label"
+        "label": "Select Label",
+         "bind": true
       }
     }
   }
@@ -566,6 +567,7 @@ For a model news we have a property which will store the `labels` of which `news
   - `searchProp` Properties from model `Label` which it will use to search.
   - `modelName` Model name from which it will search the values.
   - `id` Used for applying validation to image upload.  
+  - `bind`: true|false will update the data on related data update. `Warning`: never use is data it very big.
 
 //For Table Search 
 ```

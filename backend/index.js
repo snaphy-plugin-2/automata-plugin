@@ -4,6 +4,7 @@
 module.exports = function(server, databaseObj, helper, packageObj) {
     var saveRemoteMethod = require('./saveDb');
     var onDelete = require('./cascadingDelete');
+    var multiSmartSelect = require('./multiSmartSelect')(server, databaseObj, helper, packageObj);
     var _ = require("lodash");
     var modifyHasAndBelongsToMany = require("./modifyHasAndBelongsToMany");
     const Promise = require("bluebird");
@@ -21,6 +22,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
      * @return {[type]} [description]
      */
     var init = function() {
+        multiSmartSelect.init();
+
         if (!server.automata) {
             server.automata = true;
             //For loading the raw properties..
@@ -35,6 +38,8 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                 saveRemoteMethod.addSaveMethod(server, Model.modelName);
                 addCaseSensitiveSearch(server, Model.modelName);
                 onDelete.onCascadeDelete(server, Model.modelName);
+                //Will bind Model on multiselect which will change value of model on select..in background..
+                multiSmartSelect.bindModel(Model.modelName);
                 modifyHasAndBelongsToMany.modifyRelation(server, Model.modelName);
             });
         } else {
