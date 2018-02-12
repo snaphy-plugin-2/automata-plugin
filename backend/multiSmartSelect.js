@@ -127,6 +127,11 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                                                                             }else{
                                                                                 let index = found;
                                                                                 item[propertyName][index] = targetData.toJSON();
+                                                                                if(item[propertyName][index]){
+                                                                                    if(item[propertyName][index].id){
+                                                                                        item[propertyName][index].id = item[propertyName][index].id.toString();
+                                                                                    }
+                                                                                }
                                                                                 //Now update the item to database..
                                                                                 item.save()
                                                                                 .then(function(){
