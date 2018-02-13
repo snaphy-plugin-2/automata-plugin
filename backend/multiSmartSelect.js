@@ -4,6 +4,7 @@
 
 const Promise = require("bluebird");
 const process = require("process");
+const mongodb = require("mongodb");
 
 module.exports = function(server, databaseObj, helper, packageObj) {
     
@@ -129,7 +130,7 @@ module.exports = function(server, databaseObj, helper, packageObj) {
                                                                                 item[propertyName][index] = targetData.toJSON();
                                                                                 if(item[propertyName][index]){
                                                                                     if(item[propertyName][index].id){
-                                                                                        item[propertyName][index].id = item[propertyName][index].id.toString();
+                                                                                        item[propertyName][index].id = mongodb.ObjectID(item[propertyName][index].id);
                                                                                     }
                                                                                 }
                                                                                 //Now update the item to database..
