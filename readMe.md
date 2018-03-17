@@ -156,7 +156,9 @@ Input is used to display any input elements. of type `<input id="firstName">`
       "type": "text",
       "label": "Enter name",
       "priority": 10,
-      "id": "firstName"
+      "id": "firstName",
+      "onChange": "broadcastReceiverPublisherName", //Will get called whenever data changes.
+      "loadData": "broadcastReceiverSubscriberName" //Will change the value of the model ..whenever value               provided in  {args}
     }
 }
 ```
@@ -171,7 +173,17 @@ Input is used to display any input elements. of type `<input id="firstName">`
   - `color` color of input elements. default is transparent. 
   - `colSize` Column Size of the template. Default is `col-md-12`,
   - `inline` Boolean value true|false. Default value is false.  If set true then element will be inline.
-  
+  - `onChange` BroadCastPublisher will get called whenevet data value changes.
+  - `loadData` broadcastReceiverSubscriberName will load new data to model.
+      ```
+        //Defined in script.run.js file..
+        $rootScope.$on("onChangeListenr", function(event, args){
+          //Force load new data in load to value..
+          $rootScope.$broadcast("loadData", {
+              data: 2000 //Will load data to the input element.
+          });
+          });
+      ```
 
 ####textarea  
 Textarea of type `<textarea id="firstName" ></textarea>`
