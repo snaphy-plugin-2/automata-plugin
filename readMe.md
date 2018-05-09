@@ -156,6 +156,8 @@ Input is used to display any input elements. of type `<input id="firstName">`
       "type": "text",
       "label": "Enter name",
       "priority": 10,
+      "display": true,
+      "default": "DEFAULT VALUE",
       "id": "firstName",
       "onChange": "broadcastReceiverPublisherName", //Will get called whenever data changes.
       "loadData": "broadcastReceiverSubscriberName" //Will change the value of the model ..whenever value               provided in  {args}
@@ -169,6 +171,8 @@ Input is used to display any input elements. of type `<input id="firstName">`
   - `label` Placeholder or label text.
   - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
   - `id` id of the html elements.
+  - `display` `true|false` Either to display or hide
+  - `default` Show the data
   - `class` Class of the input element. Class is in format of ng-class. example: ["col-md-6", "exampleStyle"]
   - `color` color of input elements. default is transparent. 
   - `colSize` Column Size of the template. Default is `col-md-12`,
