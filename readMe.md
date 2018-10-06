@@ -599,11 +599,13 @@ For a model news we have a property which will store the `labels` of which `news
 
 
 
-####multiInput
+#### multiInput
 
 > For Using a Property Array of String.
 > For example situations like selecting multiple `pincodes` for an `Area` `["110011", "843302"]`
+
 //models/models.json
+```
 {
 "pincode":{
     "type": ["string"],
@@ -617,7 +619,7 @@ For a model news we have a property which will store the `labels` of which `news
     }
   }
 }
-
+```
 
 For a model news we have a property which will store the multiple `pincodes` in an `Area`
 **Options**  
@@ -628,12 +630,38 @@ For a model news we have a property which will store the multiple `pincodes` in 
   - `placeholder` label
   
   
+### htmlText
+> For displaying and storing html data in form pof WYSIWYG. 
+```
+  {
+    "secondaryDescription": {
+    "type": "string",
+    "template": {
+      "type": "htmlText",
+      "templateOptions": {
+        "inline": true,
+        "type": "text",
+        "label": "Enter Secondary Description ",
+        "id": "secondaryDescription"
+      }
+    }
+  }  
+```
+
+For a model news we have a property which will store the multiple `pincodes` in an `Area`
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `label` Label.  
+  - `inline`  Will set html `display` value as `inline-block` type.
+  
+
 
   
   
-  
      
-####singlePDFUpload  
+#### singlePDFUpload  
 
 > Use Cases: In case of uploading single PDF file to server.
  
