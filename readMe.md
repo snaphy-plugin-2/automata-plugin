@@ -595,6 +595,40 @@ For a model news we have a property which will store the `labels` of which `news
 }
 ```
 
+
+
+
+
+####multiInput
+
+> For Using a Property Array of String.
+> For example situations like selecting multiple `pincodes` for an `Area` `["110011", "843302"]`
+//models/models.json
+{
+"pincode":{
+    "type": ["string"],
+    "template":{
+      "type": "multiInput",
+      "templateOptions":{
+        "placeholder": "Enter Pincode",
+        "id": "multiLabelSelect",
+        "label": "Select Label"
+      }
+    }
+  }
+}
+
+
+For a model news we have a property which will store the multiple `pincodes` in an `Area`
+**Options**  
+
+1. `templateOptions` 
+  - `priority` numeric values which decides placement of elements. Elements with higher priority resides at top than element having lower priority.
+  - `label` Label .
+  - `placeholder` label
+  
+  
+
   
   
   
